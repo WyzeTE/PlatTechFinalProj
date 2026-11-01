@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Replace the theme the template made. Remember to update the theme name in AndroidManifest.xml if yours differs. -->
+    <style name="Theme.DentalQueue" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/teal</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSecondaryContainer">@color/mint</item>
+        <item name="colorOnSecondaryContainer">@color/teal_dark</item>
+        <item name="android:colorBackground">@color/ground</item>
+        <item name="android:statusBarColor">@color/teal</item>
+    </style>
+</resources>

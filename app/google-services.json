@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "280620205827",
+    "project_id": "dentalclinicappointmentapp",
+    "storage_bucket": "dentalclinicappointmentapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:280620205827:android:b86e30f25171ab69048b36",
+        "android_client_info": {
+          "package_name": "com.example.dentalclinicappointmentapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCG3CIquWNYHQQaLLZA0Se24Poaz3dfdfY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

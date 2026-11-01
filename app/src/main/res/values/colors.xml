@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="teal">#0E7C86</color>
+    <color name="teal_dark">#0A5B63</color>
+    <color name="ground">#F4FAFA</color>
+    <color name="ink">#12313A</color>
+    <color name="muted">#4A6068</color>
+    <color name="mint">#DDF1F0</color>
+    <color name="line">#CFE3E3</color>
+    <color name="danger">#B3261E</color>
+</resources>
