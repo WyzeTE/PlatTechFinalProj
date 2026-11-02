@@ -35,7 +35,10 @@ public class Repo {
         col.whereEqualTo("date", date).get().addOnSuccessListener(snap -> {
             Set<String> taken = new HashSet<>();
             for (DocumentSnapshot d : snap.getDocuments()) {
-                if (!"cancelled".equals(d.getString("status"))) taken.add(d.getString("time"));
+                String st = d.getString("status");
+                if (st != null && !st.equalsIgnoreCase("cancelled") && !st.equalsIgnoreCase("rejected")) {
+                    taken.add(d.getString("time"));
+                }
             }
             cb.on(taken);
         });
@@ -47,6 +50,9 @@ public class Repo {
         col.whereEqualTo("date", date).get().addOnSuccessListener(snap -> {
             DocumentReference ref = col.document();
             Appointment a = new Appointment(ref.getId(), uid(), name, service, date, time, snap.size() + 1, "pending");
+            if (auth.getCurrentUser() != null && auth.getCurrentUser().getEmail() != null) {
+                a.email = auth.getCurrentUser().getEmail();
+            }
             ref.set(a).addOnSuccessListener(v -> done.run());
         });
     }
@@ -67,13 +73,16 @@ public class Repo {
 
     // Highest queue number currently marked "serving" on a date (0 if none).
     public static ListenerRegistration listenServing(String date, Callback<Integer> cb) {
-        return col.whereEqualTo("date", date).whereEqualTo("status", "serving")
+        return col.whereEqualTo("date", date)
                 .addSnapshotListener((snap, e) -> {
                     if (snap == null) return;
                     int max = 0;
                     for (DocumentSnapshot d : snap.getDocuments()) {
-                        Long n = d.getLong("queueNumber");
-                        if (n != null && n > max) max = n.intValue();
+                        String st = d.getString("status");
+                        if (st != null && st.equalsIgnoreCase("serving")) {
+                            Long n = d.getLong("queueNumber");
+                            if (n != null && n > max) max = n.intValue();
+                        }
                     }
                     cb.on(max);
                 });
@@ -82,8 +91,11 @@ public class Repo {
     // First appointment that is still active (not done or cancelled).
     public static Appointment firstActive(List<Appointment> list) {
         for (Appointment a : list) {
-            if (a.status.equals("pending") || a.status.equals("confirmed") || a.status.equals("serving")) return a;
+            if (a.status == null) continue;
+            String st = a.status.toLowerCase();
+            if (st.equals("pending") || st.equals("approved") || st.equals("confirmed") || st.equals("serving")) return a;
         }
         return null;
     }
 }
+

@@ -4,6 +4,33 @@ const STORAGE_KEY = "QServe_data";
 const ACCOUNTS_KEY = "QServe_accounts";
 const SESSION_KEY = "QServe_session";
 
+// FIREBASE INITIALIZATION
+const firebaseConfig = {
+    apiKey: "AIzaSyCG3CIquWNYHQQaLLZA0Se24Poaz3dfdfY",
+    authDomain: "dentalclinicappointmentapp.firebaseapp.com",
+    projectId: "dentalclinicappointmentapp",
+    storageBucket: "dentalclinicappointmentapp.firebasestorage.app",
+    messagingSenderId: "280620205827",
+    appId: "1:280620205827:web:dentalclinicappointmentapp"
+};
+
+let auth = null;
+let db = null;
+let isFirebaseAvailable = false;
+
+try {
+    if (typeof firebase !== "undefined") {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        auth = firebase.auth();
+        db = firebase.firestore();
+        isFirebaseAvailable = true;
+    }
+} catch (e) {
+    console.warn("Firebase initialization failed, falling back to local state:", e);
+}
+
 const ADMIN_ACCOUNT = {
     name: "System Administrator",
     email: "admin@qserve.com",
@@ -13,52 +40,69 @@ const ADMIN_ACCOUNT = {
 
 const defaultAppointments = [
     {
-        id: 1,
+        id: "1",
+        userId: "",
+        patientName: "Alex Johnson",
         name: "Alex Johnson",
         email: "",
-        service: "General Consultation",
+        service: "Check-up",
         dentist: "John Benedict Centeno",
         date: "2026-11-02",
         time: "09:00",
         status: "Approved",
+        queueNumber: 1,
         queue: "Q-001"
     },
     {
-        id: 2,
+        id: "2",
+        userId: "",
+        patientName: "Maria Santos",
         name: "Maria Santos",
         email: "",
-        service: "Document Processing",
+        service: "Cleaning",
         dentist: "Clemence Valdez",
         date: "2026-11-02",
         time: "10:00",
         status: "Pending",
+        queueNumber: 0,
         queue: null
     },
     {
-        id: 3,
+        id: "3",
+        userId: "",
+        patientName: "John Reyes",
         name: "John Reyes",
         email: "",
-        service: "Customer Assistance",
+        service: "Filling",
         dentist: "John Benedict Centeno",
         date: "2026-11-02",
         time: "11:00",
         status: "Approved",
+        queueNumber: 2,
         queue: "Q-002"
     }
 ];
 
 const defaultServices = [
     {
+        name: "Check-up",
+        description: "General dental check-up and consultation."
+    },
+    {
+        name: "Cleaning",
+        description: "Professional dental cleaning and scaling."
+    },
+    {
+        name: "Filling",
+        description: "Tooth restoration and dental filling service."
+    },
+    {
+        name: "Braces",
+        description: "Orthodontic consultation and adjustment."
+    },
+    {
         name: "General Consultation",
         description: "General appointment and consultation service."
-    },
-    {
-        name: "Document Processing",
-        description: "Assistance with document-related requests."
-    },
-    {
-        name: "Customer Assistance",
-        description: "General customer support and assistance."
     }
 ];
 
@@ -80,21 +124,6 @@ const defaultDentists = [
     }
 ];
 
-const defaultQueue = [
-    {
-        number: "Q-001",
-        name: "Alex Johnson",
-        email: "",
-        status: "Waiting"
-    },
-    {
-        number: "Q-002",
-        name: "John Reyes",
-        email: "",
-        status: "Waiting"
-    }
-];
-
 let appointments = [];
 let services = [];
 let dentists = [];
@@ -105,7 +134,21 @@ let currentQueue = "Q-000";
 let nextQueueNumber = 3;
 let currentUser = null;
 
-// STORAGE
+// STATUS HELPER
+
+function normalizeStatus(st) {
+    if (!st) return "Pending";
+    const s = String(st).trim().toLowerCase();
+    if (s === "pending") return "Pending";
+    if (s === "approved" || s === "confirmed") return "Approved";
+    if (s === "serving") return "Serving";
+    if (s === "completed" || s === "done") return "Completed";
+    if (s === "cancelled") return "Cancelled";
+    if (s === "rejected") return "Rejected";
+    return st.charAt(0).toUpperCase() + st.slice(1);
+}
+
+// STORAGE & FIREBASE SYNC
 
 function saveData() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -117,6 +160,81 @@ function saveData() {
         currentQueue,
         nextQueueNumber
     }));
+}
+
+function rebuildQueueFromAppointments() {
+    const activeQueue = [];
+    let currentServing = "Q-000";
+
+    const sorted = [...appointments].sort((a, b) => {
+        if (a.queueNumber && b.queueNumber) return a.queueNumber - b.queueNumber;
+        return (a.date + a.time).localeCompare(b.date + b.time);
+    });
+
+    sorted.forEach(a => {
+        const normSt = (a.status || "").toLowerCase();
+        if ((normSt === "approved" || normSt === "serving") && a.queueNumber > 0) {
+            const qStr = `Q-${String(a.queueNumber).padStart(3, '0')}`;
+            if (normSt === "serving") {
+                currentServing = qStr;
+            }
+            activeQueue.push({
+                number: qStr,
+                queueNumber: a.queueNumber,
+                name: a.patientName || a.name || "Patient",
+                email: a.email || "",
+                status: normSt === "serving" ? "Serving" : "Waiting",
+                appointmentId: a.id
+            });
+        }
+    });
+
+    queue = activeQueue;
+    currentQueue = currentServing;
+}
+
+function initFirestoreSync() {
+    if (!isFirebaseAvailable || !db) return;
+
+    db.collection("appointments").onSnapshot(snapshot => {
+        const remoteAppointments = [];
+        let maxQ = 0;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const qNum = Number(data.queueNumber) || 0;
+            if (qNum > maxQ) maxQ = qNum;
+
+            const nameVal = data.patientName || data.name || "Patient";
+            const normStatus = normalizeStatus(data.status);
+
+            remoteAppointments.push({
+                id: doc.id,
+                userId: data.userId || "",
+                patientName: nameVal,
+                name: nameVal,
+                email: data.email || "",
+                service: data.service || "",
+                dentist: data.dentist || "",
+                date: data.date || "",
+                time: data.time || "",
+                status: normStatus,
+                queueNumber: qNum,
+                queue: qNum > 0 ? `Q-${String(qNum).padStart(3, '0')}` : null
+            });
+        });
+
+        appointments = remoteAppointments;
+        if (maxQ >= nextQueueNumber) {
+            nextQueueNumber = maxQ + 1;
+        }
+
+        rebuildQueueFromAppointments();
+        saveData();
+        renderAll();
+    }, err => {
+        console.error("Firestore sync error:", err);
+    });
 }
 
 function loadData() {
@@ -135,22 +253,17 @@ function loadData() {
                 }
             ];
 
-            queue = defaultQueue.map(q => ({ ...q }));
             currentQueue = "Q-000";
             nextQueueNumber = 3;
-
+            rebuildQueueFromAppointments();
         } else {
-            appointments = Array.isArray(saved.appointments)
-                ? saved.appointments
-                : [];
+            appointments = Array.isArray(saved.appointments) ? saved.appointments : [];
 
             services = Array.isArray(saved.services) && saved.services.length
                 ? saved.services
                 : defaultServices.map(s => ({ ...s }));
 
-            const savedDentists = Array.isArray(saved.dentists)
-                ? saved.dentists
-                : [];
+            const savedDentists = Array.isArray(saved.dentists) ? saved.dentists : [];
 
             dentists = [
                 ...defaultDentists.map(d => ({ ...d })),
@@ -159,26 +272,21 @@ function loadData() {
                 )
             ];
 
-            notifications = Array.isArray(saved.notifications)
-                ? saved.notifications
-                : [];
-
-            queue = Array.isArray(saved.queue)
-                ? saved.queue
-                : [];
-
+            notifications = Array.isArray(saved.notifications) ? saved.notifications : [];
             currentQueue = saved.currentQueue || "Q-000";
             nextQueueNumber = Number(saved.nextQueueNumber) || 3;
 
             appointments.forEach(a => {
-                if (a.dentist === undefined) {
-                    a.dentist = "";
-                }
+                if (!a.patientName) a.patientName = a.name || "Patient";
+                if (!a.name) a.name = a.patientName;
+                if (a.dentist === undefined) a.dentist = "";
+                a.status = normalizeStatus(a.status);
             });
+
+            rebuildQueueFromAppointments();
         }
 
         saveData();
-
     } catch (error) {
         console.error("Could not load data:", error);
 
@@ -186,9 +294,9 @@ function loadData() {
         services = defaultServices.map(s => ({ ...s }));
         dentists = defaultDentists.map(d => ({ ...d }));
         notifications = [];
-        queue = defaultQueue.map(q => ({ ...q }));
         currentQueue = "Q-000";
         nextQueueNumber = 3;
+        rebuildQueueFromAppointments();
 
         saveData();
     }
@@ -217,6 +325,7 @@ function getSession() {
 
 function saveSession(user) {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        uid: user.uid || "",
         name: user.name,
         email: user.email,
         role: user.role
@@ -239,6 +348,7 @@ function showAuthView(view) {
 
 function loginUser(user) {
     currentUser = {
+        uid: user.uid || "",
         name: user.name,
         email: user.email,
         role: user.role
@@ -255,28 +365,39 @@ function loginUser(user) {
     }
 }
 
-document.getElementById("loginForm").addEventListener("submit", function(e) {
+document.getElementById("loginForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
-    const email = document.getElementById("loginEmail")
-        .value.trim().toLowerCase();
-
+    const email = document.getElementById("loginEmail").value.trim().toLowerCase();
     const password = document.getElementById("loginPassword").value;
     const error = document.getElementById("loginError");
 
     error.textContent = "";
 
-    if (
-        email === ADMIN_ACCOUNT.email.toLowerCase() &&
-        password === ADMIN_ACCOUNT.password
-    ) {
+    if (email === ADMIN_ACCOUNT.email.toLowerCase() && password === ADMIN_ACCOUNT.password) {
         loginUser(ADMIN_ACCOUNT);
         return;
     }
 
+    if (isFirebaseAvailable && auth) {
+        try {
+            const userCred = await auth.signInWithEmailAndPassword(email, password);
+            const fbUser = userCred.user;
+            const userObj = {
+                uid: fbUser.uid,
+                name: fbUser.displayName || email.split("@")[0],
+                email: fbUser.email,
+                role: "customer"
+            };
+            loginUser(userObj);
+            return;
+        } catch (err) {
+            console.warn("Firebase Auth login attempt:", err.message);
+        }
+    }
+
     const account = getAccounts().find(user =>
-        user.email.toLowerCase() === email &&
-        user.password === password
+        user.email.toLowerCase() === email && user.password === password
     );
 
     if (!account) {
@@ -287,13 +408,11 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
     loginUser(account);
 });
 
-document.getElementById("signupForm").addEventListener("submit", function(e) {
+document.getElementById("signupForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
     const name = document.getElementById("signupName").value.trim();
-    const email = document.getElementById("signupEmail")
-        .value.trim().toLowerCase();
-
+    const email = document.getElementById("signupEmail").value.trim().toLowerCase();
     const password = document.getElementById("signupPassword").value;
     const confirmPassword = document.getElementById("confirmPassword").value;
     const error = document.getElementById("signupError");
@@ -312,16 +431,27 @@ document.getElementById("signupForm").addEventListener("submit", function(e) {
 
     const accounts = getAccounts();
 
-    if (
-        email === ADMIN_ACCOUNT.email.toLowerCase() ||
-        accounts.some(user => user.email.toLowerCase() === email)
-    ) {
+    if (email === ADMIN_ACCOUNT.email.toLowerCase() || accounts.some(user => user.email.toLowerCase() === email)) {
         error.textContent = "An account with this email already exists.";
         return;
     }
 
+    let uid = "";
+    if (isFirebaseAvailable && auth) {
+        try {
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            if (userCredential.user) {
+                uid = userCredential.user.uid;
+                await userCredential.user.updateProfile({ displayName: name });
+            }
+        } catch (err) {
+            console.warn("Firebase Auth signup notice:", err);
+        }
+    }
+
     accounts.push({
         id: Date.now(),
+        uid: uid,
         name,
         email,
         password,
@@ -331,17 +461,17 @@ document.getElementById("signupForm").addEventListener("submit", function(e) {
     saveAccounts(accounts);
 
     alert("Account created successfully. You can now log in.");
-
     this.reset();
-
     document.getElementById("loginEmail").value = email;
-
     showAuthView("login");
 });
 
 function logout() {
     currentUser = null;
     clearSession();
+    if (isFirebaseAvailable && auth) {
+        auth.signOut().catch(() => {});
+    }
 
     document.getElementById("adminApp").hidden = true;
     document.getElementById("customerApp").hidden = true;
@@ -360,9 +490,7 @@ function openAdminPortal() {
     document.getElementById("adminApp").hidden = false;
 
     document.getElementById("adminName").textContent = currentUser.name;
-
-    document.querySelector("#adminApp .avatar").textContent =
-        currentUser.name.charAt(0).toUpperCase();
+    document.querySelector("#adminApp .avatar").textContent = currentUser.name.charAt(0).toUpperCase();
 
     showPage("dashboard");
     renderAll();
@@ -372,11 +500,8 @@ function openCustomerPortal() {
     document.getElementById("adminApp").hidden = true;
     document.getElementById("customerApp").hidden = false;
 
-    document.getElementById("customerHeaderName").textContent =
-        currentUser.name;
-
-    document.getElementById("customerWelcome").textContent =
-        `Welcome, ${currentUser.name}!`;
+    document.getElementById("customerHeaderName").textContent = currentUser.name;
+    document.getElementById("customerWelcome").textContent = `Welcome, ${currentUser.name}!`;
 
     document.getElementById("profileName").value = currentUser.name;
     document.getElementById("profileEmail").value = currentUser.email;
@@ -404,12 +529,9 @@ function showPage(page, button) {
     if (button) {
         button.classList.add("active");
     } else {
-        const navButton = [
-            ...document.querySelectorAll("#adminApp .nav-item")
-        ].find(item =>
+        const navButton = [...document.querySelectorAll("#adminApp .nav-item")].find(item =>
             item.getAttribute("onclick")?.includes(`'${page}'`)
         );
-
         if (navButton) navButton.classList.add("active");
     }
 
@@ -423,9 +545,7 @@ function showPage(page, button) {
         settings: "Settings"
     };
 
-    document.getElementById("pageTitle").textContent =
-        titles[page] || "QServe";
-
+    document.getElementById("pageTitle").textContent = titles[page] || "QServe";
     document.getElementById("sidebar").classList.remove("open");
 
     renderAll();
@@ -454,22 +574,17 @@ function showCustomerPage(page, button) {
     if (button) {
         button.classList.add("active");
     } else {
-        const navButton = [
-            ...document.querySelectorAll(".customer-nav-item")
-        ].find(item =>
+        const navButton = [...document.querySelectorAll(".customer-nav-item")].find(item =>
             item.getAttribute("onclick")?.includes(`'${page}'`)
         );
-
         if (navButton) navButton.classList.add("active");
     }
 
     if (page === "customerAccount") {
         document.getElementById("profileName").value = currentUser.name;
         document.getElementById("profileEmail").value = currentUser.email;
-
         document.getElementById("profilePassword").value = "";
         document.getElementById("profileConfirmPassword").value = "";
-
         document.getElementById("profileError").textContent = "";
         document.getElementById("profileSuccess").textContent = "";
     }
@@ -481,19 +596,15 @@ function showCustomerPage(page, button) {
 
 function getToday() {
     const date = new Date();
-
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
-
     return `${year}-${month}-${day}`;
 }
 
 function formatDate(value) {
     if (!value) return "";
-
     const [year, month, day] = value.split("-");
-
     return `${month}/${day}/${year}`;
 }
 
@@ -501,14 +612,11 @@ function formatDate(value) {
 
 function openModal() {
     document.getElementById("appointmentDate").min = getToday();
-
-    document.getElementById("appointmentModal")
-        .classList.add("show");
+    document.getElementById("appointmentModal").classList.add("show");
 }
 
 function closeModal() {
-    document.getElementById("appointmentModal")
-        .classList.remove("show");
+    document.getElementById("appointmentModal").classList.remove("show");
 }
 
 document.getElementById("appointmentModal").addEventListener("click", function(e) {
@@ -521,7 +629,7 @@ document.addEventListener("keydown", function(e) {
 
 // CREATE ADMIN APPOINTMENT
 
-document.getElementById("appointmentForm").addEventListener("submit", function(e) {
+document.getElementById("appointmentForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
     const name = document.getElementById("customerName").value.trim();
@@ -541,7 +649,7 @@ document.getElementById("appointmentForm").addEventListener("submit", function(e
     }
 
     const duplicate = appointments.some(a =>
-        a.name.toLowerCase() === name.toLowerCase() &&
+        (a.name.toLowerCase() === name.toLowerCase() || a.patientName.toLowerCase() === name.toLowerCase()) &&
         a.service === service &&
         a.dentist === dentist &&
         a.date === date &&
@@ -554,21 +662,34 @@ document.getElementById("appointmentForm").addEventListener("submit", function(e
         return;
     }
 
-    appointments.push({
-        id: Date.now(),
-        name,
+    const apptData = {
+        patientName: name,
+        name: name,
         email: "",
+        userId: "",
         service,
         dentist,
         date,
         time,
-        status: "Pending",
-        queue: null
-    });
+        status: "pending",
+        queueNumber: 0
+    };
+
+    if (isFirebaseAvailable && db) {
+        try {
+            const docRef = db.collection("appointments").doc();
+            apptData.id = docRef.id;
+            await docRef.set(apptData);
+        } catch (err) {
+            console.error("Error saving appointment to Firestore:", err);
+        }
+    } else {
+        apptData.id = Date.now().toString();
+        appointments.push(apptData);
+        saveData();
+    }
 
     addNotification(`New appointment submitted by ${name}.`);
-
-    saveData();
 
     this.reset();
     closeModal();
@@ -579,7 +700,7 @@ document.getElementById("appointmentForm").addEventListener("submit", function(e
 
 // CUSTOMER BOOKING
 
-document.getElementById("customerBookingForm").addEventListener("submit", function(e) {
+document.getElementById("customerBookingForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
     if (!currentUser || currentUser.role !== "customer") return;
@@ -590,7 +711,6 @@ document.getElementById("customerBookingForm").addEventListener("submit", functi
     const time = document.getElementById("customerAppointmentTime").value;
 
     const error = document.getElementById("bookingError");
-
     error.textContent = "";
 
     if (!service || !dentist || !date || !time) {
@@ -604,7 +724,7 @@ document.getElementById("customerBookingForm").addEventListener("submit", functi
     }
 
     const duplicate = appointments.some(a =>
-        a.email === currentUser.email &&
+        (a.email === currentUser.email || (currentUser.uid && a.userId === currentUser.uid)) &&
         a.service === service &&
         a.dentist === dentist &&
         a.date === date &&
@@ -613,43 +733,52 @@ document.getElementById("customerBookingForm").addEventListener("submit", functi
     );
 
     if (duplicate) {
-        error.textContent =
-            "You already have an appointment at this schedule.";
+        error.textContent = "You already have an appointment at this schedule.";
         return;
     }
 
-    appointments.push({
-        id: Date.now(),
+    const apptData = {
+        patientName: currentUser.name,
         name: currentUser.name,
-        email: currentUser.email,
+        email: currentUser.email || "",
+        userId: currentUser.uid || "",
         service,
         dentist,
         date,
         time,
-        status: "Pending",
-        queue: null
-    });
+        status: "pending",
+        queueNumber: 0
+    };
 
-    addNotification(
-        `New appointment submitted by ${currentUser.name}.`
-    );
+    if (isFirebaseAvailable && db) {
+        try {
+            const docRef = db.collection("appointments").doc();
+            apptData.id = docRef.id;
+            await docRef.set(apptData);
+        } catch (err) {
+            console.error("Error saving appointment to Firestore:", err);
+        }
+    } else {
+        apptData.id = Date.now().toString();
+        appointments.push(apptData);
+        saveData();
+    }
 
-    saveData();
+    addNotification(`New appointment submitted by ${currentUser.name}.`);
 
     this.reset();
-
     alert("Your appointment request has been submitted.");
-
     showCustomerPage("customerSchedule");
 });
 
 // CANCEL CUSTOMER APPOINTMENT
 
-function cancelAppointment(id) {
+async function cancelAppointment(id) {
     if (!currentUser || currentUser.role !== "customer") return;
 
     const appointment = appointments.find(a =>
-        a.id === id && a.email === currentUser.email
+        String(a.id) === String(id) &&
+        (a.email === currentUser.email || (currentUser.uid && a.userId === currentUser.uid))
     );
 
     if (!appointment) return;
@@ -659,14 +788,8 @@ function cancelAppointment(id) {
         return;
     }
 
-    const entry = queue.find(q =>
-        q.number === appointment.queue
-    );
-
-    if (entry?.status === "Serving") {
-        alert(
-            "You cannot cancel an appointment that is currently being served."
-        );
+    if (appointment.status === "Serving") {
+        alert("You cannot cancel an appointment that is currently being served.");
         return;
     }
 
@@ -674,82 +797,72 @@ function cancelAppointment(id) {
         return;
     }
 
-    appointment.status = "Cancelled";
-
-    if (appointment.queue) {
-        queue = queue.filter(q =>
-            q.number !== appointment.queue
-        );
-
-        appointment.queue = null;
+    if (isFirebaseAvailable && db) {
+        try {
+            await db.collection("appointments").doc(String(id)).update({
+                status: "cancelled",
+                queueNumber: 0
+            });
+        } catch (err) {
+            console.error("Error cancelling appointment in Firestore:", err);
+        }
+    } else {
+        appointment.status = "Cancelled";
+        appointment.queueNumber = 0;
+        rebuildQueueFromAppointments();
+        saveData();
+        renderAll();
     }
 
-    addNotification(
-        `${appointment.name} cancelled an appointment.`
-    );
-
-    saveData();
-    renderAll();
-
+    addNotification(`${appointment.name || appointment.patientName} cancelled an appointment.`);
     alert("Your appointment has been cancelled.");
 }
 
 // UPDATE APPOINTMENT STATUS
 
-function updateStatus(id, status) {
-    const appointment = appointments.find(a => a.id === id);
-
+async function updateStatus(id, status) {
+    const appointment = appointments.find(a => String(a.id) === String(id));
     if (!appointment) return;
 
-    const allowed = ["Approved", "Rejected", "Cancelled"];
-
+    const allowed = ["Approved", "Rejected", "Cancelled", "approved", "rejected", "cancelled"];
     if (!allowed.includes(status)) return;
-    if (appointment.status === status) return;
 
-    const existingQueue = queue.find(q =>
-        q.number === appointment.queue
-    );
+    const normStatus = normalizeStatus(status);
+    if (appointment.status === normStatus) return;
 
-    if (
-        status === "Cancelled" &&
-        existingQueue?.status === "Serving"
-    ) {
-        alert("This customer is currently being served.");
-        return;
+    let updatedQueueNum = appointment.queueNumber;
+
+    if (normStatus === "Approved" && !appointment.queueNumber) {
+        const sameDayAppts = appointments.filter(a => a.date === appointment.date && a.queueNumber > 0);
+        let maxQ = 0;
+        sameDayAppts.forEach(a => { if (a.queueNumber > maxQ) maxQ = a.queueNumber; });
+        updatedQueueNum = maxQ + 1;
     }
 
-    appointment.status = status;
-
-    if (status === "Approved" && !appointment.queue) {
-        const number = "Q-" +
-            String(nextQueueNumber).padStart(3, "0");
-
-        appointment.queue = number;
-
-        queue.push({
-            number,
-            name: appointment.name,
-            email: appointment.email || "",
-            status: "Waiting"
-        });
-
-        nextQueueNumber++;
+    if (["Rejected", "Cancelled"].includes(normStatus)) {
+        updatedQueueNum = 0;
     }
 
-    if (["Rejected", "Cancelled"].includes(status)) {
-        queue = queue.filter(q =>
-            q.number !== appointment.queue
-        );
+    const dbStatus = normStatus.toLowerCase();
 
-        appointment.queue = null;
+    if (isFirebaseAvailable && db) {
+        try {
+            await db.collection("appointments").doc(String(id)).update({
+                status: dbStatus,
+                queueNumber: updatedQueueNum
+            });
+        } catch (err) {
+            console.error("Error updating status in Firestore:", err);
+        }
+    } else {
+        appointment.status = normStatus;
+        appointment.queueNumber = updatedQueueNum;
+        rebuildQueueFromAppointments();
+        saveData();
+        renderAll();
     }
 
-    addNotification(
-        `${appointment.name}'s appointment is now ${status}.`
-    );
-
-    saveData();
-    renderAll();
+    addNotification(`${appointment.name || appointment.patientName}'s appointment is now ${normStatus}.`);
 }
 
 // APPOINTMENT TABLE
@@ -760,29 +873,19 @@ function appointmentHTML(a) {
     if (a.status === "Pending") {
         actions = `
             <div class="actions">
-                <button class="btn"
-                    onclick="updateStatus(${a.id}, 'Approved')">
-                    Approve
-                </button>
-
-                <button class="btn btn-danger"
-                    onclick="updateStatus(${a.id}, 'Rejected')">
-                    Reject
-                </button>
+                <button class="btn" onclick="updateStatus('${a.id}', 'Approved')">Approve</button>
+                <button class="btn btn-danger" onclick="updateStatus('${a.id}', 'Rejected')">Reject</button>
             </div>
         `;
     } else if (a.status === "Approved") {
         actions = `
-            <button class="btn btn-light"
-                onclick="updateStatus(${a.id}, 'Cancelled')">
-                Cancel
-            </button>
+            <button class="btn btn-light" onclick="updateStatus('${a.id}', 'Cancelled')">Cancel</button>
         `;
     }
 
     return `
         <tr>
-            <td>${escapeHTML(a.name)}</td>
+            <td>${escapeHTML(a.patientName || a.name)}</td>
             <td>${escapeHTML(a.service)}</td>
             <td>${escapeHTML(a.dentist || "Not assigned")}</td>
             <td>${escapeHTML(formatDate(a.date))}</td>
@@ -801,8 +904,7 @@ function renderAppointments() {
     const container = document.getElementById("appointmentTable");
 
     if (!appointments.length) {
-        container.innerHTML =
-            '<div class="empty">No appointments found.</div>';
+        container.innerHTML = '<div class="empty">No appointments found.</div>';
         return;
     }
 
@@ -833,53 +935,49 @@ function renderAppointments() {
 
 // QUEUE MANAGEMENT
 
-function callNext() {
-    const next = queue.find(q => q.status === "Waiting");
+async function callNext() {
+    const nextItem = queue.find(q => q.status === "Waiting");
 
-    if (!next) {
+    if (!nextItem) {
         alert("There are no waiting customers.");
         return;
     }
 
-    const previous = queue.find(q =>
-        q.status === "Serving"
-    );
+    const previousItem = queue.find(q => q.status === "Serving");
 
-    if (previous) {
-        previous.status = "Completed";
-
-        const oldAppointment = appointments.find(a =>
-            a.queue === previous.number
-        );
-
-        if (oldAppointment) {
-            oldAppointment.status = "Completed";
+    if (isFirebaseAvailable && db) {
+        try {
+            const batch = db.batch();
+            if (previousItem) {
+                const prevRef = db.collection("appointments").doc(String(previousItem.appointmentId));
+                batch.update(prevRef, { status: "done" });
+            }
+            const nextRef = db.collection("appointments").doc(String(nextItem.appointmentId));
+            batch.update(nextRef, { status: "serving" });
+            await batch.commit();
+        } catch (err) {
+            console.error("Error calling next customer in Firestore:", err);
         }
+    } else {
+        if (previousItem) {
+            previousItem.status = "Completed";
+            const oldAppt = appointments.find(a => String(a.id) === String(previousItem.appointmentId));
+            if (oldAppt) oldAppt.status = "Completed";
+        }
+        nextItem.status = "Serving";
+        currentQueue = nextItem.number;
+        const appt = appointments.find(a => String(a.id) === String(nextItem.appointmentId));
+        if (appt) appt.status = "Serving";
+
+        saveData();
+        renderAll();
     }
 
-    next.status = "Serving";
-    currentQueue = next.number;
-
-    const appointment = appointments.find(a =>
-        a.queue === next.number
-    );
-
-    if (appointment) {
-        appointment.status = "Serving";
-    }
-
-    addNotification(
-        `Now serving ${next.number} - ${next.name}.`
-    );
-
-    saveData();
-    renderAll();
+    addNotification(`Now serving ${nextItem.number} - ${nextItem.name}.`);
 }
 
 function renderQueue() {
-    const waiting = queue.filter(q =>
-        q.status === "Waiting"
-    ).length;
+    const waiting = queue.filter(q => q.status === "Waiting").length;
 
     document.getElementById("currentQueue").textContent = currentQueue;
     document.getElementById("queueCurrent").textContent = currentQueue;
@@ -889,8 +987,7 @@ function renderQueue() {
     const container = document.getElementById("queueTable");
 
     if (!queue.length) {
-        container.innerHTML =
-            '<div class="empty">No customers in the queue.</div>';
+        container.innerHTML = '<div class="empty">No customers in the queue.</div>';
         return;
     }
 
@@ -932,23 +1029,14 @@ function renderQueue() {
 function renderServices() {
     const adminContainer = document.getElementById("serviceList");
     const customerContainer = document.getElementById("customerServiceList");
-
     const adminSelect = document.getElementById("serviceInput");
     const customerSelect = document.getElementById("customerService");
 
     if (!services.length) {
-        adminContainer.innerHTML =
-            '<div class="empty">No services available.</div>';
-
-        customerContainer.innerHTML =
-            '<div class="empty">No services available.</div>';
-
-        adminSelect.innerHTML =
-            '<option value="">No services available</option>';
-
-        customerSelect.innerHTML =
-            '<option value="">No services available</option>';
-
+        adminContainer.innerHTML = '<div class="empty">No services available.</div>';
+        customerContainer.innerHTML = '<div class="empty">No services available.</div>';
+        adminSelect.innerHTML = '<option value="">No services available</option>';
+        customerSelect.innerHTML = '<option value="">No services available</option>';
         return;
     }
 
@@ -965,7 +1053,6 @@ function renderServices() {
 
     const options = `
         <option value="">Select a service</option>
-
         ${services.map(s => `
             <option value="${escapeHTML(s.name)}">
                 ${escapeHTML(s.name)}
@@ -983,15 +1070,11 @@ document.getElementById("dentistForm").addEventListener("submit", function(e) {
     e.preventDefault();
 
     const name = document.getElementById("dentistName").value.trim();
-
-    const specialty = document.getElementById("dentistSpecialty")
-        .value.trim();
+    const specialty = document.getElementById("dentistSpecialty").value.trim();
 
     if (!name || !specialty) return;
 
-    if (dentists.some(d =>
-        d.name.toLowerCase() === name.toLowerCase()
-    )) {
+    if (dentists.some(d => d.name.toLowerCase() === name.toLowerCase())) {
         alert("This dentist already exists.");
         return;
     }
@@ -1003,9 +1086,7 @@ document.getElementById("dentistForm").addEventListener("submit", function(e) {
     });
 
     addNotification(`${name} was added to the dentist list.`);
-
     saveData();
-
     this.reset();
     renderAll();
 
@@ -1014,7 +1095,6 @@ document.getElementById("dentistForm").addEventListener("submit", function(e) {
 
 function removeDentist(id) {
     const dentist = dentists.find(d => d.id === id);
-
     if (!dentist) return;
 
     const hasAppointments = appointments.some(a =>
@@ -1023,9 +1103,7 @@ function removeDentist(id) {
     );
 
     if (hasAppointments) {
-        alert(
-            "This dentist has active appointments and cannot be removed."
-        );
+        alert("This dentist has active appointments and cannot be removed.");
         return;
     }
 
@@ -1034,10 +1112,7 @@ function removeDentist(id) {
     }
 
     dentists = dentists.filter(d => d.id !== id);
-
-    addNotification(
-        `${dentist.name} was removed from the dentist list.`
-    );
+    addNotification(`${dentist.name} was removed from the dentist list.`);
 
     saveData();
     renderAll();
@@ -1045,20 +1120,13 @@ function removeDentist(id) {
 
 function renderDentists() {
     const container = document.getElementById("dentistList");
-
     const customerSelect = document.getElementById("customerDentist");
     const adminSelect = document.getElementById("adminDentistInput");
 
     if (!dentists.length) {
-        container.innerHTML =
-            '<div class="empty">No dentists available.</div>';
-
-        customerSelect.innerHTML =
-            '<option value="">No dentists available</option>';
-
-        adminSelect.innerHTML =
-            '<option value="">No dentists available</option>';
-
+        container.innerHTML = '<div class="empty">No dentists available.</div>';
+        customerSelect.innerHTML = '<option value="">No dentists available</option>';
+        adminSelect.innerHTML = '<option value="">No dentists available</option>';
         return;
     }
 
@@ -1068,17 +1136,12 @@ function renderDentists() {
                 <h4>${escapeHTML(d.name)}</h4>
                 <p>${escapeHTML(d.specialty)}</p>
             </div>
-
-            <button class="btn btn-danger"
-                onclick="removeDentist(${d.id})">
-                Remove
-            </button>
+            <button class="btn btn-danger" onclick="removeDentist(${d.id})">Remove</button>
         </div>
     `).join("");
 
     const options = `
         <option value="">Select a dentist</option>
-
         ${dentists.map(d => `
             <option value="${escapeHTML(d.name)}">
                 ${escapeHTML(d.name)} - ${escapeHTML(d.specialty)}
@@ -1098,15 +1161,9 @@ document.getElementById("profileForm").addEventListener("submit", function(e) {
     if (!currentUser || currentUser.role !== "customer") return;
 
     const name = document.getElementById("profileName").value.trim();
-
-    const email = document.getElementById("profileEmail")
-        .value.trim().toLowerCase();
-
+    const email = document.getElementById("profileEmail").value.trim().toLowerCase();
     const password = document.getElementById("profilePassword").value;
-
-    const confirmPassword = document.getElementById(
-        "profileConfirmPassword"
-    ).value;
+    const confirmPassword = document.getElementById("profileConfirmPassword").value;
 
     const error = document.getElementById("profileError");
     const success = document.getElementById("profileSuccess");
@@ -1120,8 +1177,7 @@ document.getElementById("profileForm").addEventListener("submit", function(e) {
     }
 
     if (password && password.length < 8) {
-        error.textContent =
-            "New password must contain at least 8 characters.";
+        error.textContent = "New password must contain at least 8 characters.";
         return;
     }
 
@@ -1136,10 +1192,7 @@ document.getElementById("profileForm").addEventListener("submit", function(e) {
     }
 
     const accounts = getAccounts();
-
-    const account = accounts.find(user =>
-        user.email === currentUser.email
-    );
+    const account = accounts.find(user => user.email === currentUser.email);
 
     if (!account) {
         error.textContent = "Account could not be found.";
@@ -1147,8 +1200,7 @@ document.getElementById("profileForm").addEventListener("submit", function(e) {
     }
 
     const emailExists = accounts.some(user =>
-        user.email.toLowerCase() === email &&
-        user.id !== account.id
+        user.email.toLowerCase() === email && user.id !== account.id
     );
 
     if (emailExists) {
@@ -1168,6 +1220,7 @@ document.getElementById("profileForm").addEventListener("submit", function(e) {
     appointments.forEach(a => {
         if (a.email === oldEmail) {
             a.email = email;
+            a.patientName = name;
             a.name = name;
         }
     });
@@ -1187,16 +1240,11 @@ document.getElementById("profileForm").addEventListener("submit", function(e) {
     saveData();
 
     document.getElementById("customerHeaderName").textContent = name;
-
-    document.getElementById("customerWelcome").textContent =
-        `Welcome, ${name}!`;
-
+    document.getElementById("customerWelcome").textContent = `Welcome, ${name}!`;
     document.getElementById("profilePassword").value = "";
     document.getElementById("profileConfirmPassword").value = "";
 
-    success.textContent =
-        "Your profile has been updated successfully.";
-
+    success.textContent = "Your profile has been updated successfully.";
     renderAll();
 });
 
@@ -1215,8 +1263,7 @@ function renderNotifications() {
     const container = document.getElementById("notificationList");
 
     if (!notifications.length) {
-        container.innerHTML =
-            '<div class="empty">No notifications available.</div>';
+        container.innerHTML = '<div class="empty">No notifications available.</div>';
         return;
     }
 
@@ -1231,91 +1278,23 @@ function renderNotifications() {
 // ADMIN DASHBOARD
 
 function renderDashboard() {
-    document.getElementById("totalAppointments").textContent =
-        appointments.length;
-
+    document.getElementById("totalAppointments").textContent = appointments.length;
     document.getElementById("pendingAppointments").textContent =
         appointments.filter(a => a.status === "Pending").length;
-
     document.getElementById("approvedAppointments").textContent =
         appointments.filter(a => a.status === "Approved").length;
-
-    document.getElementById("totalServices").textContent =
-        services.length;
+    document.getElementById("totalServices").textContent = services.length;
 
     const recent = [...appointments]
-        .sort((a, b) =>
-            (b.date + b.time).localeCompare(a.date + a.time)
-        )
+        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
         .slice(0, 5);
 
-    document.getElementById("dashboardAppointments").innerHTML =
-        recent.length ? `
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Customer</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        ${recent.map(a => `
-                            <tr>
-                                <td>${escapeHTML(a.name)}</td>
-                                <td>${escapeHTML(formatDate(a.date))}</td>
-                                <td>
-                                    <span class="status ${escapeHTML(a.status)}">
-                                        ${escapeHTML(a.status)}
-                                    </span>
-                                </td>
-                            </tr>
-                        `).join("")}
-                    </tbody>
-                </table>
-            </div>
-        ` : '<div class="empty">No recent appointments.</div>';
-}
-
-// CUSTOMER PORTAL
-
-function getCustomerAppointments() {
-    if (!currentUser) return [];
-
-    return appointments
-        .filter(a => a.email === currentUser.email)
-        .sort((a, b) =>
-            (b.date + b.time).localeCompare(a.date + a.time)
-        );
-}
-
-function renderCustomerPortal() {
-    if (!currentUser || currentUser.role !== "customer") return;
-
-    const mine = getCustomerAppointments();
-
-    document.getElementById("customerTotalAppointments").textContent =
-        mine.length;
-
-    document.getElementById("customerPendingAppointments").textContent =
-        mine.filter(a => a.status === "Pending").length;
-
-    document.getElementById("customerApprovedAppointments").textContent =
-        mine.filter(a =>
-            ["Approved", "Serving"].includes(a.status)
-        ).length;
-
-    const recent = mine.slice(0, 5);
-
-    document.getElementById("customerRecentAppointments").innerHTML =
-        recent.length ? `
+    document.getElementById("dashboardAppointments").innerHTML = recent.length ? `
+        <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th>Service</th>
-                        <th>Dentist</th>
+                        <th>Customer</th>
                         <th>Date</th>
                         <th>Status</th>
                     </tr>
@@ -1324,8 +1303,7 @@ function renderCustomerPortal() {
                 <tbody>
                     ${recent.map(a => `
                         <tr>
-                            <td>${escapeHTML(a.service)}</td>
-                            <td>${escapeHTML(a.dentist || "Not assigned")}</td>
+                            <td>${escapeHTML(a.patientName || a.name)}</td>
                             <td>${escapeHTML(formatDate(a.date))}</td>
                             <td>
                                 <span class="status ${escapeHTML(a.status)}">
@@ -1336,88 +1314,128 @@ function renderCustomerPortal() {
                     `).join("")}
                 </tbody>
             </table>
-        ` : '<div class="empty">You have no appointments yet.</div>';
+        </div>
+    ` : '<div class="empty">No recent appointments.</div>';
+}
 
-    document.getElementById("customerAppointmentTable").innerHTML =
-        mine.length ? `
-            <table>
-                <thead>
+// CUSTOMER PORTAL
+
+function getCustomerAppointments() {
+    if (!currentUser) return [];
+
+    return appointments
+        .filter(a =>
+            (a.email && a.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+            (currentUser.uid && a.userId === currentUser.uid)
+        )
+        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+}
+
+function renderCustomerPortal() {
+    if (!currentUser || currentUser.role !== "customer") return;
+
+    const mine = getCustomerAppointments();
+
+    document.getElementById("customerTotalAppointments").textContent = mine.length;
+    document.getElementById("customerPendingAppointments").textContent =
+        mine.filter(a => a.status === "Pending").length;
+    document.getElementById("customerApprovedAppointments").textContent =
+        mine.filter(a => ["Approved", "Serving"].includes(a.status)).length;
+
+    const recent = mine.slice(0, 5);
+
+    document.getElementById("customerRecentAppointments").innerHTML = recent.length ? `
+        <table>
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Dentist</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${recent.map(a => `
                     <tr>
-                        <th>Service</th>
-                        <th>Dentist</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Queue</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <td>${escapeHTML(a.service)}</td>
+                        <td>${escapeHTML(a.dentist || "Not assigned")}</td>
+                        <td>${escapeHTML(formatDate(a.date))}</td>
+                        <td>
+                            <span class="status ${escapeHTML(a.status)}">
+                                ${escapeHTML(a.status)}
+                            </span>
+                        </td>
                     </tr>
-                </thead>
+                `).join("")}
+            </tbody>
+        </table>
+    ` : '<div class="empty">You have no appointments yet.</div>';
 
-                <tbody>
-                    ${mine.map(a => `
-                        <tr>
-                            <td>${escapeHTML(a.service)}</td>
-                            <td>${escapeHTML(a.dentist || "Not assigned")}</td>
-                            <td>${escapeHTML(formatDate(a.date))}</td>
-                            <td>${escapeHTML(a.time)}</td>
-                            <td>${escapeHTML(a.queue || "—")}</td>
-                            <td>
-                                <span class="status ${escapeHTML(a.status)}">
-                                    ${escapeHTML(a.status)}
-                                </span>
-                            </td>
-                            <td>
-                                ${
-                                    ["Pending", "Approved"].includes(a.status)
-                                        ? `<button class="btn btn-danger"
-                                            onclick="cancelAppointment(${a.id})">
-                                            Cancel
-                                        </button>`
-                                        : '<span class="muted">—</span>'
-                                }
-                            </td>
-                        </tr>
-                    `).join("")}
-                </tbody>
-            </table>
-        ` : '<div class="empty">You have no appointments yet.</div>';
+    document.getElementById("customerAppointmentTable").innerHTML = mine.length ? `
+        <table>
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Dentist</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Queue</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${mine.map(a => `
+                    <tr>
+                        <td>${escapeHTML(a.service)}</td>
+                        <td>${escapeHTML(a.dentist || "Not assigned")}</td>
+                        <td>${escapeHTML(formatDate(a.date))}</td>
+                        <td>${escapeHTML(a.time)}</td>
+                        <td>${escapeHTML(a.queue || (a.queueNumber ? `Q-${String(a.queueNumber).padStart(3, '0')}` : "—"))}</td>
+                        <td>
+                            <span class="status ${escapeHTML(a.status)}">
+                                ${escapeHTML(a.status)}
+                            </span>
+                        </td>
+                        <td>
+                            ${
+                                ["Pending", "Approved"].includes(a.status)
+                                    ? `<button class="btn btn-danger" onclick="cancelAppointment('${a.id}')">Cancel</button>`
+                                    : '<span class="muted">—</span>'
+                            }
+                        </td>
+                    </tr>
+                `).join("")}
+            </tbody>
+        </table>
+    ` : '<div class="empty">You have no appointments yet.</div>';
 
     const active = mine.find(a =>
-        a.queue &&
-        ["Approved", "Serving"].includes(a.status)
+        a.queueNumber > 0 && ["Approved", "Serving"].includes(a.status)
     );
 
-    document.getElementById("customerQueueNumber").textContent =
-        active?.queue || "—";
-
-    document.getElementById("customerCurrentQueue").textContent =
-        currentQueue;
+    const activeQueueStr = active ? `Q-${String(active.queueNumber).padStart(3, '0')}` : "—";
+    document.getElementById("customerQueueNumber").textContent = activeQueueStr;
+    document.getElementById("customerCurrentQueue").textContent = currentQueue;
 
     let message = "You currently have no active queue.";
 
     if (active) {
-        const entry = queue.find(q =>
-            q.number === active.queue
-        );
-
-        if (entry?.status === "Waiting") {
-            message =
-                "Your appointment is approved. Please wait for your turn.";
-        } else if (entry?.status === "Serving") {
+        if (active.status === "Approved") {
+            message = "Your appointment is approved. Please wait for your turn.";
+        } else if (active.status === "Serving") {
             message = "It is your turn! Please proceed.";
         }
     } else {
-        const completed = mine.find(a =>
-            a.status === "Completed"
-        );
-
+        const completed = mine.find(a => a.status === "Completed");
         if (completed) {
             message = "Your previous service has been completed.";
         }
     }
 
-    document.getElementById("customerQueueStatus").textContent =
-        message;
+    document.getElementById("customerQueueStatus").textContent = message;
 }
 
 // HTML ESCAPING
@@ -1450,12 +1468,8 @@ loadData();
 
 const savedSession = getSession();
 
-if (
-    savedSession &&
-    ["admin", "customer"].includes(savedSession.role)
-) {
+if (savedSession && ["admin", "customer"].includes(savedSession.role)) {
     currentUser = savedSession;
-
     document.getElementById("authSection").hidden = true;
 
     if (currentUser.role === "admin") {
@@ -1463,7 +1477,6 @@ if (
     } else {
         openCustomerPortal();
     }
-
 } else {
     document.getElementById("authSection").hidden = false;
     document.getElementById("adminApp").hidden = true;
@@ -1471,3 +1484,6 @@ if (
 }
 
 renderAll();
+
+// Start Firestore Realtime Listener
+initFirestoreSync();
