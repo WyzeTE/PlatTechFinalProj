@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QServe | Appointment Management</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <section id="authSection" class="auth-section">
+        <div class="auth-card">
+            <div class="logo auth-logo">Q<span>Serve</span></div>
+            <p class="auth-subtitle">Online Appointment and Queue Management</p>
+
+            <div id="loginView">
+                <h2>Welcome Back</h2>
+                <p class="description">Sign in to access your account.</p>
+
+                <form id="loginForm">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+
+                    <p id="loginError" class="error"></p>
+                    <button type="submit" class="btn full-width">Log In</button>
+                </form>
+
+                <p class="auth-switch">
+                    Don't have an account?
+                    <button type="button" onclick="showAuthView('signup')">Sign Up</button>
+                </p>
+            </div>
+
+            <div id="signupView" hidden>
+                <h2>Create Account</h2>
+                <p class="description">Register to start booking appointments.</p>
+
+                <form id="signupForm">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" placeholder="Enter your full name" required>
+
+                    <label for="signupEmail">Email Address</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" minlength="8" placeholder="At least 8 characters" required>
+
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+
+                    <p id="signupError" class="error"></p>
+                    <button type="submit" class="btn full-width">Create Account</button>
+                </form>
+
+                <p class="auth-switch">
+                    Already have an account?
+                    <button type="button" onclick="showAuthView('login')">Log In</button>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <div class="app" id="adminApp" hidden>
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">Q<span>Serve</span></div>
+
+            <p class="nav-label">MAIN MENU</p>
+            <button class="nav-item active" onclick="showPage('dashboard',this)">Dashboard</button>
+            <button class="nav-item" onclick="showPage('appointments',this)">Appointments</button>
+            <button class="nav-item" onclick="showPage('queue',this)">Queue Management</button>
+
+            <p class="nav-label">MANAGEMENT</p>
+            <button class="nav-item" onclick="showPage('services',this)">Services</button>
+            <button class="nav-item" onclick="showPage('dentists',this)">Dentists</button>
+            <button class="nav-item" onclick="showPage('notifications',this)">Notifications</button>
+            <button class="nav-item" onclick="showPage('settings',this)">Settings</button>
+
+            <p class="nav-label">ACCOUNT</p>
+            <button class="nav-item logout-btn" onclick="logout()">Log Out</button>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="mobile-menu" onclick="toggleSidebar()">☰</button>
+                    <h2 id="pageTitle">Dashboard</h2>
+                </div>
+                <div class="profile">
+                    <strong id="adminName">Administrator</strong>
+                    <div class="avatar">A</div>
+                </div>
+            </header>
+
+            <section class="page active" id="dashboard">
+                <div class="page-heading">
+                    <h1>Welcome back, Administrator!</h1>
+                    <p>Here's what's happening with your appointments.</p>
+                </div>
+
+                <div class="stats">
+                    <div class="card">
+                        <p class="stat-title">Total Appointments</p>
+                        <h2 class="stat-number" id="totalAppointments">0</h2>
+                    </div>
+                    <div class="card">
+                        <p class="stat-title">Pending Requests</p>
+                        <h2 class="stat-number" id="pendingAppointments">0</h2>
+                    </div>
+                    <div class="card">
+                        <p class="stat-title">Approved</p>
+                        <h2 class="stat-number" id="approvedAppointments">0</h2>
+                    </div>
+                    <div class="card">
+                        <p class="stat-title">Available Services</p>
+                        <h2 class="stat-number" id="totalServices">0</h2>
+                    </div>
+                </div>
+
+                <div class="content-grid">
+                    <div class="card">
+                        <h3 class="section-title">Recent Appointments</h3>
+                        <div id="dashboardAppointments"></div>
+                    </div>
+                    <div class="card">
+                        <h3 class="section-title">Queue Overview</h3>
+                        <p class="muted">Currently Serving</p>
+                        <h1 class="queue-number" id="currentQueue">Q-000</h1>
+                        <p class="muted">Waiting Customers</p>
+                        <h2 class="queue-number" id="waitingQueue">0</h2>
+                        <button class="btn" onclick="showPage('queue')">Manage Queue</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="appointments">
+                <div class="page-heading">
+                    <h1>Appointments</h1>
+                    <p>View and manage customer appointment requests.</p>
+                </div>
+                <div class="card">
+                    <div class="section-header">
+                        <h3>Appointment List</h3>
+                        <button class="btn" onclick="openModal()">+ New Appointment</button>
+                    </div>
+                    <div class="table-wrap" id="appointmentTable"></div>
+                </div>
+            </section>
+
+            <section class="page" id="queue">
+                <div class="page-heading">
+                    <h1>Queue Management</h1>
+                    <p>Manage customer queue numbers and serving status.</p>
+                </div>
+                <div class="content-grid">
+                    <div class="card">
+                        <h3 class="section-title">Now Serving</h3>
+                        <h1 class="queue-number" id="queueCurrent">Q-000</h1>
+                        <button class="btn" onclick="callNext()">Call Next Customer</button>
+                    </div>
+                    <div class="card">
+                        <h3 class="section-title">Waiting Customers</h3>
+                        <h1 class="queue-number" id="queueWaiting">0</h1>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="section-title">Queue List</h3>
+                    <div class="table-wrap" id="queueTable"></div>
+                </div>
+            </section>
+
+            <section class="page" id="services">
+                <div class="page-heading">
+                    <h1>Services</h1>
+                    <p>Available services offered by the establishment.</p>
+                </div>
+                <div class="service-list" id="serviceList"></div>
+            </section>
+
+            <section class="page" id="dentists">
+                <div class="page-heading">
+                    <h1>Dentist Management</h1>
+                    <p>Add and manage dentists available for appointments.</p>
+                </div>
+
+                <div class="card">
+                    <h3 class="section-title">Add Dentist</h3>
+                    <form id="dentistForm" class="inline-form">
+                        <div>
+                            <label for="dentistName">Dentist Name</label>
+                            <input type="text" id="dentistName" placeholder="Dr. Full Name" required>
+                        </div>
+                        <div>
+                            <label for="dentistSpecialty">Specialty</label>
+                            <input type="text" id="dentistSpecialty" placeholder="e.g. General Dentistry" required>
+                        </div>
+                        <button type="submit" class="btn">Add Dentist</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 class="section-title">Dentist List</h3>
+                    <div id="dentistList"></div>
+                </div>
+            </section>
+
+            <section class="page" id="notifications">
+                <div class="page-heading">
+                    <h1>Notifications</h1>
+                    <p>Recent system activity and customer updates.</p>
+                </div>
+                <div class="card" id="notificationList"></div>
+            </section>
+
+            <section class="page" id="settings">
+                <div class="page-heading">
+                    <h1>Settings</h1>
+                    <p>Basic system information.</p>
+                </div>
+                <div class="card">
+                    <p>System Name: QServe</p>
+                    <p>System Type: Online Appointment and Queue Management System</p>
+                    <p>Version: 1.1</p>
+                    <p>Administrator: System Administrator</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="customer-app" id="customerApp" hidden>
+        <header class="customer-header">
+            <div class="logo">Q<span>Serve</span></div>
+            <div class="customer-profile">
+                <strong id="customerHeaderName">Customer</strong>
+                <button class="btn btn-light" onclick="logout()">Log Out</button>
+            </div>
+        </header>
+
+        <main class="customer-main">
+            <section class="customer-page active" id="customerDashboard">
+                <div class="page-heading">
+                    <h1 id="customerWelcome">Welcome!</h1>
+                    <p>Manage your appointments and check your queue status.</p>
+                </div>
+
+                <div class="stats">
+                    <div class="card">
+                        <p class="stat-title">Total Appointments</p>
+                        <h2 class="stat-number" id="customerTotalAppointments">0</h2>
+                    </div>
+                    <div class="card">
+                        <p class="stat-title">Pending</p>
+                        <h2 class="stat-number" id="customerPendingAppointments">0</h2>
+                    </div>
+                    <div class="card">
+                        <p class="stat-title">Approved</p>
+                        <h2 class="stat-number" id="customerApprovedAppointments">0</h2>
+                    </div>
+                </div>
+
+                <div class="content-grid">
+                    <div class="card">
+                        <h3 class="section-title">Quick Actions</h3>
+                        <button class="btn" onclick="showCustomerPage('customerBooking')">+ Book an Appointment</button>
+                        <button class="btn btn-light" onclick="showCustomerPage('customerSchedule')">View My Schedule</button>
+                    </div>
+                    <div class="card">
+                        <h3 class="section-title">My Queue Status</h3>
+                        <p class="muted">My Queue Number</p>
+                        <h1 class="queue-number" id="customerQueueNumber">—</h1>
+                        <p class="muted">Currently Serving</p>
+                        <h2 class="queue-number" id="customerCurrentQueue">Q-000</h2>
+                        <p id="customerQueueStatus">You currently have no active queue.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="section-title">Recent Appointments</h3>
+                    <div class="table-wrap" id="customerRecentAppointments"></div>
+                </div>
+            </section>
+
+            <section class="customer-page" id="customerBooking">
+                <div class="page-heading">
+                    <h1>Book an Appointment</h1>
+                    <p>Select a service, dentist, and your preferred schedule.</p>
+                </div>
+                <div class="card form-card">
+                    <form id="customerBookingForm">
+                        <label for="customerService">Select Service</label>
+                        <select id="customerService" required></select>
+
+                        <label for="customerDentist">Select Dentist</label>
+                        <select id="customerDentist" required></select>
+
+                        <label for="customerAppointmentDate">Appointment Date</label>
+                        <input type="date" id="customerAppointmentDate" required>
+
+                        <label for="customerAppointmentTime">Appointment Time</label>
+                        <input type="time" id="customerAppointmentTime" required>
+
+                        <p id="bookingError" class="error"></p>
+                        <button type="submit" class="btn">Submit Appointment</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="customer-page" id="customerSchedule">
+                <div class="page-heading">
+                    <h1>My Schedule</h1>
+                    <p>View and manage your appointment requests.</p>
+                </div>
+                <div class="card">
+                    <h3 class="section-title">My Appointments</h3>
+                    <div class="table-wrap" id="customerAppointmentTable"></div>
+                </div>
+            </section>
+
+            <section class="customer-page" id="customerServices">
+                <div class="page-heading">
+                    <h1>Available Services</h1>
+                    <p>Explore the services available for booking.</p>
+                </div>
+                <div class="service-list" id="customerServiceList"></div>
+            </section>
+
+            <section class="customer-page" id="customerAccount">
+                <div class="page-heading">
+                    <h1>My Account</h1>
+                    <p>Manage your personal information.</p>
+                </div>
+                <div class="card form-card">
+                    <h3 class="section-title">Edit Profile</h3>
+                    <form id="profileForm">
+                        <label for="profileName">Full Name</label>
+                        <input type="text" id="profileName" required>
+
+                        <label for="profileEmail">Email Address</label>
+                        <input type="email" id="profileEmail" required>
+
+                        <label for="profilePassword">New Password</label>
+                        <input type="password" id="profilePassword" minlength="8" placeholder="Leave blank to keep current password">
+
+                        <label for="profileConfirmPassword">Confirm New Password</label>
+                        <input type="password" id="profileConfirmPassword" placeholder="Confirm new password">
+
+                        <p id="profileError" class="error"></p>
+                        <p id="profileSuccess" class="success"></p>
+                        <button type="submit" class="btn">Save Changes</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <nav class="customer-navigation">
+            <button class="customer-nav-item active" onclick="showCustomerPage('customerDashboard',this)">Dashboard</button>
+            <button class="customer-nav-item" onclick="showCustomerPage('customerBooking',this)">Book Appointment</button>
+            <button class="customer-nav-item" onclick="showCustomerPage('customerSchedule',this)">My Schedule</button>
+            <button class="customer-nav-item" onclick="showCustomerPage('customerServices',this)">Services</button>
+            <button class="customer-nav-item" onclick="showCustomerPage('customerAccount',this)">My Account</button>
+        </nav>
+    </div>
+
+    <div class="modal" id="appointmentModal">
+        <div class="modal-content">
+            <h2>New Appointment</h2>
+            <form id="appointmentForm">
+                <label for="customerName">Customer Name</label>
+                <input type="text" id="customerName" required>
+
+                <label for="serviceInput">Service</label>
+                <select id="serviceInput" required></select>
+
+                <label for="adminDentistInput">Dentist</label>
+                <select id="adminDentistInput" required></select>
+
+                <label for="appointmentDate">Appointment Date</label>
+                <input type="date" id="appointmentDate" required>
+
+                <label for="appointmentTime">Appointment Time</label>
+                <input type="time" id="appointmentTime" required>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save Appointment</button>
+                    <button type="button" class="btn btn-light" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
