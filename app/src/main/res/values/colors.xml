@@ -2,12 +2,21 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="teal">#0E7C86</color>
-    <color name="teal_dark">#0A5B63</color>
-    <color name="ground">#F4FAFA</color>
-    <color name="ink">#12313A</color>
-    <color name="muted">#4A6068</color>
-    <color name="mint">#DDF1F0</color>
-    <color name="line">#CFE3E3</color>
+
+    <!-- Color Palette #4: Fresh & Natural -->
+    <color name="forest_green">#244B3A</color>
+    <color name="forest_green_dark">#1A382B</color>
+    <color name="off_white">#FAF9F6</color>
+    <color name="sage">#A8B5A0</color>
+    <color name="sage_light">#E6ECDF</color>
+
+    <!-- App Aliases -->
+    <color name="teal">#244B3A</color>
+    <color name="teal_dark">#1A382B</color>
+    <color name="ground">#FAF9F6</color>
+    <color name="ink">#18261F</color>
+    <color name="muted">#4D5E54</color>
+    <color name="mint">#E6ECDF</color>
+    <color name="line">#D3DDD0</color>
     <color name="danger">#B3261E</color>
 </resources>

@@ -26,6 +26,14 @@ public class Homefragment extends Fragment {
 
         v.findViewById(R.id.btnBook).setOnClickListener(x -> ((MainActivity) requireActivity()).go(R.id.tab_book));
         v.findViewById(R.id.btnQueue).setOnClickListener(x -> ((MainActivity) requireActivity()).go(R.id.tab_queue));
+        View queueGrid = v.findViewById(R.id.btnQueueGrid);
+        if (queueGrid != null) queueGrid.setOnClickListener(x -> ((MainActivity) requireActivity()).go(R.id.tab_queue));
+
+        View btnNotif = v.findViewById(R.id.btnNotification);
+        if (btnNotif != null) btnNotif.setOnClickListener(x -> ((MainActivity) requireActivity()).showNotifications());
+
+        View btnLogout = v.findViewById(R.id.btnLogout);
+        if (btnLogout != null) btnLogout.setOnClickListener(x -> ((MainActivity) requireActivity()).confirmLogout());
 
         reg = Repo.listenMine(list -> {
             Appointment next = Repo.firstActive(list);

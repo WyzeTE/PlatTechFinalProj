@@ -6,35 +6,70 @@
     android:orientation="vertical"
     android:background="@color/ground">
 
-    <!-- Header Section -->
+    <!-- Header Section with High-Visibility Logo & Notification Bell -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@color/teal"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:paddingTop="48dp"
-        android:paddingBottom="28dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/forest_green"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="44dp"
+        android:paddingBottom="20dp">
 
-        <TextView
-            android:id="@+id/subtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#B2EBF2"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.04" />
+        <!-- Logo Icon -->
+        <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_logo_oralcare" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Title & Subtitle Container -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="My Queue 🎟️"
-            android:textColor="@android:color/white"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium" />
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ORALCARE CONNECT"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:includeFontPadding="false" />
+
+            <TextView
+                android:id="@+id/subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/sage_light"
+                android:textSize="12sp"
+                android:includeFontPadding="false" />
+        </LinearLayout>
+
+        <!-- Notification Bell Icon -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnNotification"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardBackgroundColor="#1A382B"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_bell" />
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 
     <ScrollView
@@ -80,7 +115,7 @@
                             android:background="@color/mint"
                             android:paddingHorizontal="14dp"
                             android:paddingVertical="5dp"
-                            android:textColor="@color/teal_dark"
+                            android:textColor="@color/forest_green_dark"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:letterSpacing="0.06" />
@@ -100,7 +135,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:textColor="@color/teal"
+                            android:textColor="@color/forest_green"
                             android:textSize="58sp"
                             android:textStyle="bold"
                             android:fontFamily="sans-serif-medium" />
@@ -142,7 +177,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="NOW SERVING"
-                                android:textColor="@color/teal_dark"
+                                android:textColor="@color/forest_green_dark"
                                 android:textSize="11sp"
                                 android:textStyle="bold"
                                 android:letterSpacing="0.05" />
@@ -152,7 +187,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:textColor="@color/teal_dark"
+                                android:textColor="@color/forest_green_dark"
                                 android:textSize="24sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -178,7 +213,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="AHEAD OF YOU"
-                                android:textColor="@color/teal_dark"
+                                android:textColor="@color/forest_green_dark"
                                 android:textSize="11sp"
                                 android:textStyle="bold"
                                 android:letterSpacing="0.05" />
@@ -188,12 +223,150 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:textColor="@color/teal_dark"
+                                android:textColor="@color/forest_green_dark"
                                 android:textSize="24sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
+
+                <!-- Progress Tracker Section -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:text="Progress Tracker"
+                    android:textColor="@color/ink"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    app:cardBackgroundColor="@android:color/white"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/line"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <!-- Step 1: Pending -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_check_circle" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:text="Request Submitted"
+                                android:textColor="@color/ink"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Line Divider -->
+                        <View
+                            android:layout_width="2dp"
+                            android:layout_height="16dp"
+                            android:layout_marginStart="9dp"
+                            android:layout_marginVertical="2dp"
+                            android:background="@color/sage" />
+
+                        <!-- Step 2: Confirmed -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_check_circle" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:text="Confirmed by Clinic"
+                                android:textColor="@color/ink"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Line Divider -->
+                        <View
+                            android:layout_width="2dp"
+                            android:layout_height="16dp"
+                            android:layout_marginStart="9dp"
+                            android:layout_marginVertical="2dp"
+                            android:background="@color/line" />
+
+                        <!-- Step 3: Now Serving -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_circle_outline" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:text="Now Serving / In Chair"
+                                android:textColor="@color/muted"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <!-- Line Divider -->
+                        <View
+                            android:layout_width="2dp"
+                            android:layout_height="16dp"
+                            android:layout_marginStart="9dp"
+                            android:layout_marginVertical="2dp"
+                            android:background="@color/line" />
+
+                        <!-- Step 4: Completed -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_circle_outline" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:text="Treatment Completed"
+                                android:textColor="@color/muted"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
                 <!-- Cancel Button -->
                 <Button
@@ -207,6 +380,54 @@
                     app:cornerSize="14dp"
                     app:strokeColor="@color/danger"
                     app:strokeWidth="1.5dp" />
+            </LinearLayout>
+
+            <!-- Empty State View when no queue ticket exists -->
+            <LinearLayout
+                android:id="@+id/emptyQueue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@android:color/white"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@drawable/ic_queue"
+                    app:tint="@color/forest_green" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="No Active Queue Ticket"
+                    android:textColor="@color/ink"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="You currently have no active appointments or queue numbers. Book a new appointment to view live status."
+                    android:textColor="@color/muted"
+                    android:textSize="14sp"
+                    android:textAlignment="center" />
+
+                <Button
+                    android:id="@+id/btnBookQueueEmpty"
+                    style="@style/Widget.Material3.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="24dp"
+                    android:text="Book an Appointment"
+                    android:textColor="@android:color/white"
+                    android:textSize="15sp"
+                    android:backgroundTint="@color/forest_green"
+                    app:cornerSize="12dp" />
             </LinearLayout>
 
         </LinearLayout>
