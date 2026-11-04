@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QServe | Appointment Management</title>
+    <meta name="description" content="OralCare Connect dental clinic appointment and queue management system">
+    <title>OralCare Connect | Dental Clinic Appointment System</title>
     <link rel="stylesheet" href="style.css">
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -12,64 +14,71 @@
     <script src="script.js" defer></script>
 </head>
 <body>
+    <!-- AUTHENTICATION -->
     <section id="authSection" class="auth-section">
         <div class="auth-card">
-            <div class="logo auth-logo">Q<span>Serve</span></div>
+            <div class="brand-logo auth-brand">
+                <img src="Assets/oralcare-connect-logo.png" alt="OralCare Connect logo">
+            </div>
             <p class="auth-subtitle">Online Appointment and Queue Management</p>
 
+            <!-- LOGIN -->
             <div id="loginView">
                 <h2>Welcome Back</h2>
                 <p class="description">Sign in to access your account.</p>
-
                 <form id="loginForm">
                     <label for="loginEmail">Email Address</label>
-                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                    <input type="email" id="loginEmail" autocomplete="username" placeholder="Enter your email" required>
 
                     <label for="loginPassword">Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    <div class="password-field">
+                        <input type="password" id="loginPassword" autocomplete="current-password" placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle" data-target="loginPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                    </div>
 
-                    <p id="loginError" class="error"></p>
+                    <p id="loginError" class="error" role="alert"></p>
                     <button type="submit" class="btn full-width">Log In</button>
                 </form>
-
-                <p class="auth-switch">
-                    Don't have an account?
-                    <button type="button" onclick="showAuthView('signup')">Sign Up</button>
-                </p>
+                <p class="auth-switch">Don't have an account? <button type="button" onclick="showAuthView('signup')">Sign Up</button></p>
             </div>
 
+            <!-- SIGN UP -->
             <div id="signupView" hidden>
                 <h2>Create Account</h2>
                 <p class="description">Register to start booking appointments.</p>
-
                 <form id="signupForm">
                     <label for="signupName">Full Name</label>
-                    <input type="text" id="signupName" placeholder="Enter your full name" required>
+                    <input type="text" id="signupName" autocomplete="name" placeholder="Enter your full name" required>
 
                     <label for="signupEmail">Email Address</label>
-                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                    <input type="email" id="signupEmail" autocomplete="email" placeholder="Enter your email" required>
 
                     <label for="signupPassword">Password</label>
-                    <input type="password" id="signupPassword" minlength="8" placeholder="At least 8 characters" required>
+                    <div class="password-field">
+                        <input type="password" id="signupPassword" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required>
+                        <button type="button" class="password-toggle" data-target="signupPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                    </div>
 
                     <label for="confirmPassword">Confirm Password</label>
-                    <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                    <div class="password-field">
+                        <input type="password" id="confirmPassword" autocomplete="new-password" placeholder="Confirm your password" required>
+                        <button type="button" class="password-toggle" data-target="confirmPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                    </div>
 
-                    <p id="signupError" class="error"></p>
+                    <p id="signupError" class="error" role="alert"></p>
                     <button type="submit" class="btn full-width">Create Account</button>
                 </form>
-
-                <p class="auth-switch">
-                    Already have an account?
-                    <button type="button" onclick="showAuthView('login')">Log In</button>
-                </p>
+                <p class="auth-switch">Already have an account? <button type="button" onclick="showAuthView('login')">Log In</button></p>
             </div>
         </div>
     </section>
 
+    <!-- ADMIN APPLICATION -->
     <div class="app" id="adminApp" hidden>
         <aside class="sidebar" id="sidebar">
-            <div class="logo">Q<span>Serve</span></div>
+            <div class="brand-logo sidebar-brand">
+                <img src="Assets/oralcare-connect-logo.png" alt="OralCare Connect logo">
+            </div>
 
             <p class="nav-label">MAIN MENU</p>
             <button class="nav-item active" onclick="showPage('dashboard',this)">Dashboard</button>
@@ -89,7 +98,7 @@
         <main class="main">
             <header class="topbar">
                 <div class="topbar-left">
-                    <button class="mobile-menu" onclick="toggleSidebar()">☰</button>
+                    <button class="mobile-menu" onclick="toggleSidebar()" aria-label="Toggle sidebar">☰</button>
                     <h2 id="pageTitle">Dashboard</h2>
                 </div>
                 <div class="profile">
@@ -98,6 +107,7 @@
                 </div>
             </header>
 
+            <!-- ADMIN DASHBOARD -->
             <section class="page active" id="dashboard">
                 <div class="page-heading">
                     <h1>Welcome back, Administrator!</h1>
@@ -139,6 +149,7 @@
                 </div>
             </section>
 
+            <!-- ADMIN APPOINTMENTS -->
             <section class="page" id="appointments">
                 <div class="page-heading">
                     <h1>Appointments</h1>
@@ -153,6 +164,7 @@
                 </div>
             </section>
 
+            <!-- QUEUE MANAGEMENT -->
             <section class="page" id="queue">
                 <div class="page-heading">
                     <h1>Queue Management</h1>
@@ -175,14 +187,16 @@
                 </div>
             </section>
 
+            <!-- SERVICES -->
             <section class="page" id="services">
                 <div class="page-heading">
                     <h1>Services</h1>
-                    <p>Available services offered by the establishment.</p>
+                    <p>Available services offered by the clinic.</p>
                 </div>
                 <div class="service-list" id="serviceList"></div>
             </section>
 
+            <!-- DENTISTS -->
             <section class="page" id="dentists">
                 <div class="page-heading">
                     <h1>Dentist Management</h1>
@@ -194,11 +208,19 @@
                     <form id="dentistForm" class="inline-form">
                         <div>
                             <label for="dentistName">Dentist Name</label>
-                            <input type="text" id="dentistName" placeholder="Dr. Full Name" required>
+                            <input type="text" id="dentistName" placeholder="Full Name" required>
                         </div>
                         <div>
-                            <label for="dentistSpecialty">Specialty</label>
+                            <label for="dentistSpecialty">Specialty / Service Focus</label>
                             <input type="text" id="dentistSpecialty" placeholder="e.g. General Dentistry" required>
+                        </div>
+                        <div>
+                            <label for="dentistBio">Short Description</label>
+                            <input type="text" id="dentistBio" placeholder="A short, clinic-approved introduction">
+                        </div>
+                        <div>
+                            <label for="dentistPhoto">Photo Path (Optional)</label>
+                            <input type="text" id="dentistPhoto" placeholder="Assets/dentist-name.jpg">
                         </div>
                         <button type="submit" class="btn">Add Dentist</button>
                     </form>
@@ -210,6 +232,7 @@
                 </div>
             </section>
 
+            <!-- NOTIFICATIONS -->
             <section class="page" id="notifications">
                 <div class="page-heading">
                     <h1>Notifications</h1>
@@ -218,24 +241,74 @@
                 <div class="card" id="notificationList"></div>
             </section>
 
+            <!-- SETTINGS -->
             <section class="page" id="settings">
                 <div class="page-heading">
                     <h1>Settings</h1>
-                    <p>Basic system information.</p>
+                    <p>Manage clinic information and system preferences.</p>
                 </div>
-                <div class="card">
-                    <p>System Name: QServe</p>
-                    <p>System Type: Online Appointment and Queue Management System</p>
-                    <p>Version: 1.1</p>
-                    <p>Administrator: System Administrator</p>
+
+                <div class="card settings-card">
+                    <h3 class="section-title">Clinic and System Settings</h3>
+                    <form id="settingsForm" class="settings-form">
+                        <div class="settings-grid">
+                            <div>
+                                <label for="settingClinicName">Clinic Name</label>
+                                <input id="settingClinicName" type="text" value="OralCare Connect" required>
+                            </div>
+                            <div>
+                                <label for="settingPhone">Contact Number</label>
+                                <input id="settingPhone" type="tel" placeholder="Enter clinic contact number">
+                            </div>
+                            <div>
+                                <label for="settingEmail">Contact Email</label>
+                                <input id="settingEmail" type="email" placeholder="Enter clinic email">
+                            </div>
+                            <div>
+                                <label for="settingAddress">Clinic Address</label>
+                                <input id="settingAddress" type="text" placeholder="Enter clinic address">
+                            </div>
+                            <div>
+                                <label for="settingOpening">Opening Time</label>
+                                <input id="settingOpening" type="time" value="08:00">
+                            </div>
+                            <div>
+                                <label for="settingClosing">Closing Time</label>
+                                <input id="settingClosing" type="time" value="17:00">
+                            </div>
+                            <div>
+                                <label for="settingAdminName">Administrator Name</label>
+                                <input id="settingAdminName" type="text" value="System Administrator">
+                            </div>
+                            <div>
+                                <label for="settingAdminEmail">Administrator Email</label>
+                                <input id="settingAdminEmail" type="email" value="admin@qserve.com" disabled>
+                            </div>
+                        </div>
+
+                        <p id="settingsMessage" class="success" role="status"></p>
+                        <div class="form-actions">
+                            <button class="btn" type="submit">Save Settings</button>
+                            <button class="btn btn-light" type="reset">Reset Changes</button>
+                        </div>
+                    </form>
+
+                    <div class="system-info">
+                        <p><strong>System:</strong> OralCare Connect</p>
+                        <p><strong>Type:</strong> Dental Clinic Appointment and Queue Management System</p>
+                        <p><strong>Version:</strong> 1.2</p>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
 
+    <!-- CUSTOMER APPLICATION -->
     <div class="customer-app" id="customerApp" hidden>
         <header class="customer-header">
-            <div class="logo">Q<span>Serve</span></div>
+            <div class="brand-logo customer-brand">
+                <img src="Assets/oralcare-connect-logo.png" alt="OralCare Connect logo">
+            </div>
             <div class="customer-profile">
                 <strong id="customerHeaderName">Customer</strong>
                 <button class="btn btn-light" onclick="logout()">Log Out</button>
@@ -243,6 +316,7 @@
         </header>
 
         <main class="customer-main">
+            <!-- CUSTOMER DASHBOARD -->
             <section class="customer-page active" id="customerDashboard">
                 <div class="page-heading">
                     <h1 id="customerWelcome">Welcome!</h1>
@@ -286,11 +360,13 @@
                 </div>
             </section>
 
+            <!-- BOOKING -->
             <section class="customer-page" id="customerBooking">
                 <div class="page-heading">
                     <h1>Book an Appointment</h1>
                     <p>Select a service, dentist, and your preferred schedule.</p>
                 </div>
+
                 <div class="card form-card">
                     <form id="customerBookingForm">
                         <label for="customerService">Select Service</label>
@@ -305,12 +381,13 @@
                         <label for="customerAppointmentTime">Appointment Time</label>
                         <input type="time" id="customerAppointmentTime" required>
 
-                        <p id="bookingError" class="error"></p>
+                        <p id="bookingError" class="error" role="alert"></p>
                         <button type="submit" class="btn">Submit Appointment</button>
                     </form>
                 </div>
             </section>
 
+            <!-- CUSTOMER SCHEDULE -->
             <section class="customer-page" id="customerSchedule">
                 <div class="page-heading">
                     <h1>My Schedule</h1>
@@ -322,6 +399,16 @@
                 </div>
             </section>
 
+            <!-- CUSTOMER DENTISTS -->
+            <section class="customer-page" id="customerDentists">
+                <div class="page-heading">
+                    <h1>Meet Our Dentists</h1>
+                    <p>Get to know the dental professionals available at our clinic.</p>
+                </div>
+                <div class="dentist-grid" id="customerDentistList"></div>
+            </section>
+
+            <!-- CUSTOMER SERVICES -->
             <section class="customer-page" id="customerServices">
                 <div class="page-heading">
                     <h1>Available Services</h1>
@@ -330,11 +417,13 @@
                 <div class="service-list" id="customerServiceList"></div>
             </section>
 
+            <!-- CUSTOMER ACCOUNT -->
             <section class="customer-page" id="customerAccount">
                 <div class="page-heading">
                     <h1>My Account</h1>
                     <p>Manage your personal information.</p>
                 </div>
+
                 <div class="card form-card">
                     <h3 class="section-title">Edit Profile</h3>
                     <form id="profileForm">
@@ -345,28 +434,37 @@
                         <input type="email" id="profileEmail" required>
 
                         <label for="profilePassword">New Password</label>
-                        <input type="password" id="profilePassword" minlength="8" placeholder="Leave blank to keep current password">
+                        <div class="password-field">
+                            <input type="password" id="profilePassword" minlength="8" placeholder="Leave blank to keep current password">
+                            <button type="button" class="password-toggle" data-target="profilePassword" aria-label="Show password" aria-pressed="false">Show</button>
+                        </div>
 
                         <label for="profileConfirmPassword">Confirm New Password</label>
-                        <input type="password" id="profileConfirmPassword" placeholder="Confirm new password">
+                        <div class="password-field">
+                            <input type="password" id="profileConfirmPassword" placeholder="Confirm new password">
+                            <button type="button" class="password-toggle" data-target="profileConfirmPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                        </div>
 
-                        <p id="profileError" class="error"></p>
-                        <p id="profileSuccess" class="success"></p>
+                        <p id="profileError" class="error" role="alert"></p>
+                        <p id="profileSuccess" class="success" role="status"></p>
                         <button type="submit" class="btn">Save Changes</button>
                     </form>
                 </div>
             </section>
         </main>
 
-        <nav class="customer-navigation">
+        <!-- CUSTOMER NAVIGATION -->
+        <nav class="customer-navigation" aria-label="Customer navigation">
             <button class="customer-nav-item active" onclick="showCustomerPage('customerDashboard',this)">Dashboard</button>
             <button class="customer-nav-item" onclick="showCustomerPage('customerBooking',this)">Book Appointment</button>
             <button class="customer-nav-item" onclick="showCustomerPage('customerSchedule',this)">My Schedule</button>
             <button class="customer-nav-item" onclick="showCustomerPage('customerServices',this)">Services</button>
+            <button class="customer-nav-item" onclick="showCustomerPage('customerDentists',this)">Dentists</button>
             <button class="customer-nav-item" onclick="showCustomerPage('customerAccount',this)">My Account</button>
         </nav>
     </div>
 
+    <!-- ADMIN APPOINTMENT MODAL -->
     <div class="modal" id="appointmentModal">
         <div class="modal-content">
             <h2>New Appointment</h2>

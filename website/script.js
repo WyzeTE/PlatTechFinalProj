@@ -110,17 +110,23 @@ const defaultDentists = [
     {
         id: 1,
         name: "John Benedict Centeno",
-        specialty: "General Dentistry"
+        specialty: "General Dentistry",
+        bio: "Available for general dental appointments and consultations.",
+        photo: ""
     },
     {
         id: 2,
         name: "Clemence Valdez",
-        specialty: "Dental Surgery"
+        specialty: "Dental Surgery",
+        bio: "Available for dental appointments and patient consultations.",
+        photo: ""
     },
     {
         id: 3,
         name: "Praswel Jim Dimaano",
-        specialty: "Orthodontics"
+        specialty: "Orthodontics",
+        bio: "Available for dental appointments and patient consultations.",
+        photo: ""
     }
 ];
 
@@ -248,7 +254,7 @@ function loadData() {
 
             notifications = [
                 {
-                    message: "QServe system initialized.",
+                    message: "OralCare Connect system initialized.",
                     time: "Just now"
                 }
             ];
@@ -270,9 +276,18 @@ function loadData() {
                 ...savedDentists.filter(existing =>
                     !defaultDentists.some(d => d.id === existing.id)
                 )
-            ];
+            ].map(d => ({
+                bio: d.bio || "Available for dental appointments and consultations.",
+                photo: d.photo || "",
+                ...d
+            }));
 
             notifications = Array.isArray(saved.notifications) ? saved.notifications : [];
+            notifications = notifications.map((n, index) => ({
+                id: n.id || `legacy-${index}-${Date.now()}`,
+                read: Boolean(n.read),
+                ...n
+            }));
             currentQueue = saved.currentQueue || "Q-000";
             nextQueueNumber = Number(saved.nextQueueNumber) || 3;
 
@@ -336,6 +351,22 @@ function clearSession() {
     sessionStorage.removeItem(SESSION_KEY);
 }
 
+// SHOW / HIDE PASSWORD
+
+document.addEventListener("click", function (event) {
+    const button = event.target.closest(".password-toggle[data-target]");
+    if (!button) return;
+
+    const input = document.getElementById(button.dataset.target);
+    if (!input) return;
+
+    const showPassword = input.type === "password";
+    input.type = showPassword ? "text" : "password";
+    button.textContent = showPassword ? "Hide" : "Show";
+    button.setAttribute("aria-label", showPassword ? "Hide password" : "Show password");
+    button.setAttribute("aria-pressed", String(showPassword));
+});
+
 // AUTHENTICATION
 
 function showAuthView(view) {
@@ -364,7 +395,6 @@ function loginUser(user) {
         openCustomerPortal();
     }
 }
-
 document.getElementById("loginForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
@@ -545,7 +575,7 @@ function showPage(page, button) {
         settings: "Settings"
     };
 
-    document.getElementById("pageTitle").textContent = titles[page] || "QServe";
+    document.getElementById("pageTitle").textContent = titles[page] || "OralCare Connect";
     document.getElementById("sidebar").classList.remove("open");
 
     renderAll();
@@ -750,25 +780,46 @@ document.getElementById("customerBookingForm").addEventListener("submit", async 
         queueNumber: 0
     };
 
+    // Save the appointment to Firestore when Firebase is available.
+    // Do not show a success message unless the save actually succeeds.
     if (isFirebaseAvailable && db) {
         try {
             const docRef = db.collection("appointments").doc();
             apptData.id = docRef.id;
-            await docRef.set(apptData);
+
+            await docRef.set({
+                ...apptData,
+                status: "pending",
+                queueNumber: 0
+            });
+
+            // Add it locally immediately so the customer can see it
+            // while the Firestore real-time listener updates the data.
+            appointments = appointments.filter(a => String(a.id) !== String(apptData.id));
+            appointments.push({ ...apptData, status: "Pending" });
+            rebuildQueueFromAppointments();
+            saveData();
+
         } catch (err) {
             console.error("Error saving appointment to Firestore:", err);
+            error.textContent = "Your appointment could not be submitted. Please try again. If the problem continues, contact the administrator.";
+            return;
         }
     } else {
         apptData.id = Date.now().toString();
+        apptData.status = "Pending";
         appointments.push(apptData);
+        rebuildQueueFromAppointments();
         saveData();
     }
 
     addNotification(`New appointment submitted by ${currentUser.name}.`);
+    saveData();
 
     this.reset();
     alert("Your appointment request has been submitted.");
     showCustomerPage("customerSchedule");
+    renderAll();
 });
 
 // CANCEL CUSTOMER APPOINTMENT
@@ -824,45 +875,53 @@ async function updateStatus(id, status) {
     const appointment = appointments.find(a => String(a.id) === String(id));
     if (!appointment) return;
 
-    const allowed = ["Approved", "Rejected", "Cancelled", "approved", "rejected", "cancelled"];
-    if (!allowed.includes(status)) return;
-
     const normStatus = normalizeStatus(status);
-    if (appointment.status === normStatus) return;
+    const allowed = ["Approved", "Rejected", "Cancelled", "Completed"];
+    if (!allowed.includes(normStatus) || appointment.status === normStatus) return;
 
-    let updatedQueueNum = appointment.queueNumber;
-
-    if (normStatus === "Approved" && !appointment.queueNumber) {
-        const sameDayAppts = appointments.filter(a => a.date === appointment.date && a.queueNumber > 0);
-        let maxQ = 0;
-        sameDayAppts.forEach(a => { if (a.queueNumber > maxQ) maxQ = a.queueNumber; });
-        updatedQueueNum = maxQ + 1;
+    if (normStatus === "Completed" && !["Approved", "Serving"].includes(appointment.status)) {
+        alert("Only approved or currently serving appointments can be marked as completed.");
+        return;
     }
 
-    if (["Rejected", "Cancelled"].includes(normStatus)) {
+    let updatedQueueNum = Number(appointment.queueNumber) || 0;
+
+    if (normStatus === "Approved" && !updatedQueueNum) {
+        const sameDayAppts = appointments.filter(a =>
+            a.date === appointment.date && Number(a.queueNumber) > 0
+        );
+        updatedQueueNum = sameDayAppts.reduce(
+            (max, a) => Math.max(max, Number(a.queueNumber) || 0), 0
+        ) + 1;
+    }
+
+    if (["Rejected", "Cancelled", "Completed"].includes(normStatus)) {
         updatedQueueNum = 0;
     }
-
-    const dbStatus = normStatus.toLowerCase();
 
     if (isFirebaseAvailable && db) {
         try {
             await db.collection("appointments").doc(String(id)).update({
-                status: dbStatus,
+                status: normStatus.toLowerCase(),
                 queueNumber: updatedQueueNum
             });
         } catch (err) {
-            console.error("Error updating status in Firestore:", err);
+            console.error("Error updating appointment in Firestore:", err);
+            alert("The appointment could not be updated. Please try again.");
+            return;
         }
-    } else {
-        appointment.status = normStatus;
-        appointment.queueNumber = updatedQueueNum;
-        rebuildQueueFromAppointments();
-        saveData();
-        renderAll();
     }
 
-    addNotification(`${appointment.name || appointment.patientName}'s appointment is now ${normStatus}.`);
+    appointment.status = normStatus;
+    appointment.queueNumber = updatedQueueNum;
+    appointment.queue = updatedQueueNum
+        ? `Q-${String(updatedQueueNum).padStart(3, "0")}`
+        : null;
+
+    rebuildQueueFromAppointments();
+    addNotification(`${appointment.patientName || appointment.name}'s appointment is now ${normStatus}.`);
+    saveData();
+    renderAll();
 }
 
 // APPOINTMENT TABLE
@@ -875,12 +934,19 @@ function appointmentHTML(a) {
             <div class="actions">
                 <button class="btn" onclick="updateStatus('${a.id}', 'Approved')">Approve</button>
                 <button class="btn btn-danger" onclick="updateStatus('${a.id}', 'Rejected')">Reject</button>
+                <button class="btn btn-light" onclick="deleteAppointment('${a.id}', 'admin')">Delete</button>
             </div>
         `;
-    } else if (a.status === "Approved") {
+    } else if (["Approved", "Serving"].includes(a.status)) {
         actions = `
-            <button class="btn btn-light" onclick="updateStatus('${a.id}', 'Cancelled')">Cancel</button>
+            <div class="actions">
+                <button class="btn" onclick="updateStatus('${a.id}', 'Completed')">Complete</button>
+                ${a.status === "Approved" ? `<button class="btn btn-light" onclick="updateStatus('${a.id}', 'Cancelled')">Cancel</button>` : ""}
+                <button class="btn btn-danger" onclick="deleteAppointment('${a.id}', 'admin')">Delete</button>
+            </div>
         `;
+    } else {
+        actions = `<button class="btn btn-danger" onclick="deleteAppointment('${a.id}', 'admin')">Delete</button>`;
     }
 
     return `
@@ -890,11 +956,7 @@ function appointmentHTML(a) {
             <td>${escapeHTML(a.dentist || "Not assigned")}</td>
             <td>${escapeHTML(formatDate(a.date))}</td>
             <td>${escapeHTML(a.time)}</td>
-            <td>
-                <span class="status ${escapeHTML(a.status)}">
-                    ${escapeHTML(a.status)}
-                </span>
-            </td>
+            <td><span class="status ${escapeHTML(a.status)}">${escapeHTML(a.status)}</span></td>
             <td>${actions}</td>
         </tr>
     `;
@@ -931,6 +993,43 @@ function renderAppointments() {
             </tbody>
         </table>
     `;
+}
+
+// DELETE APPOINTMENT (ADMIN OR CUSTOMER)
+
+async function deleteAppointment(id, actor = "customer") {
+    const appointment = appointments.find(a => String(a.id) === String(id));
+    if (!appointment) return;
+
+    if (actor === "customer") {
+        if (!currentUser || currentUser.role !== "customer") return;
+        const belongsToUser =
+            (appointment.email && appointment.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+            (currentUser.uid && appointment.userId === currentUser.uid);
+        if (!belongsToUser || appointment.status !== "Cancelled") {
+            alert("You can only delete your own cancelled appointments.");
+            return;
+        }
+    }
+
+    const label = appointment.patientName || appointment.name || "this appointment";
+    if (!confirm(`Delete ${label}'s appointment permanently?`)) return;
+
+    if (isFirebaseAvailable && db) {
+        try {
+            await db.collection("appointments").doc(String(id)).delete();
+        } catch (err) {
+            console.error("Error deleting appointment from Firestore:", err);
+            alert("The appointment could not be deleted. Please try again.");
+            return;
+        }
+    }
+
+    appointments = appointments.filter(a => String(a.id) !== String(id));
+    rebuildQueueFromAppointments();
+    addNotification(`Appointment for ${label} was deleted.`);
+    saveData();
+    renderAll();
 }
 
 // QUEUE MANAGEMENT
@@ -1071,6 +1170,8 @@ document.getElementById("dentistForm").addEventListener("submit", function(e) {
 
     const name = document.getElementById("dentistName").value.trim();
     const specialty = document.getElementById("dentistSpecialty").value.trim();
+    const bio = document.getElementById("dentistBio").value.trim();
+    const photo = document.getElementById("dentistPhoto").value.trim();
 
     if (!name || !specialty) return;
 
@@ -1082,7 +1183,9 @@ document.getElementById("dentistForm").addEventListener("submit", function(e) {
     dentists.push({
         id: Date.now(),
         name,
-        specialty
+        specialty,
+        bio: bio || "Available for dental appointments and consultations.",
+        photo
     });
 
     addNotification(`${name} was added to the dentist list.`);
@@ -1120,11 +1223,13 @@ function removeDentist(id) {
 
 function renderDentists() {
     const container = document.getElementById("dentistList");
+    const customerCards = document.getElementById("customerDentistList");
     const customerSelect = document.getElementById("customerDentist");
     const adminSelect = document.getElementById("adminDentistInput");
 
     if (!dentists.length) {
         container.innerHTML = '<div class="empty">No dentists available.</div>';
+        if (customerCards) customerCards.innerHTML = '<div class="empty">No dentists available.</div>';
         customerSelect.innerHTML = '<option value="">No dentists available</option>';
         adminSelect.innerHTML = '<option value="">No dentists available</option>';
         return;
@@ -1135,17 +1240,29 @@ function renderDentists() {
             <div>
                 <h4>${escapeHTML(d.name)}</h4>
                 <p>${escapeHTML(d.specialty)}</p>
+                <small>${escapeHTML(d.bio || "Available for dental appointments and consultations.")}</small>
             </div>
-            <button class="btn btn-danger" onclick="removeDentist(${d.id})">Remove</button>
+            <button class="btn btn-danger" onclick="removeDentist(${Number(d.id)})">Remove</button>
         </div>
     `).join("");
+
+    if (customerCards) {
+        customerCards.innerHTML = dentists.map(d => `
+            <article class="dentist-card">
+                ${d.photo ? `<img src="${escapeHTML(d.photo)}" alt="${escapeHTML(d.name)}" class="dentist-photo">` : '<div class="dentist-photo dentist-photo-placeholder" aria-hidden="true">OC</div>'}
+                <div class="dentist-card-content">
+                    <h3>${escapeHTML(d.name)}</h3>
+                    <p class="dentist-specialty">${escapeHTML(d.specialty)}</p>
+                    <p>${escapeHTML(d.bio || "Available for dental appointments and consultations.")}</p>
+                </div>
+            </article>
+        `).join("");
+    }
 
     const options = `
         <option value="">Select a dentist</option>
         ${dentists.map(d => `
-            <option value="${escapeHTML(d.name)}">
-                ${escapeHTML(d.name)} - ${escapeHTML(d.specialty)}
-            </option>
+            <option value="${escapeHTML(d.name)}">${escapeHTML(d.name)} - ${escapeHTML(d.specialty)}</option>
         `).join("")}
     `;
 
@@ -1252,27 +1369,114 @@ document.getElementById("profileForm").addEventListener("submit", function(e) {
 
 function addNotification(message) {
     notifications.unshift({
+        id: Date.now().toString() + Math.random().toString(16).slice(2),
         message,
-        time: new Date().toLocaleString()
+        time: new Date().toLocaleString(),
+        read: false
     });
 
     notifications = notifications.slice(0, 50);
 }
 
+function toggleNotificationRead(id) {
+    const item = notifications.find(n => String(n.id) === String(id));
+    if (!item) return;
+    item.read = !item.read;
+    saveData();
+    renderNotifications();
+}
+
+function deleteNotification(id) {
+    notifications = notifications.filter(n => String(n.id) !== String(id));
+    saveData();
+    renderNotifications();
+}
+
 function renderNotifications() {
     const container = document.getElementById("notificationList");
-
     if (!notifications.length) {
         container.innerHTML = '<div class="empty">No notifications available.</div>';
         return;
     }
 
-    container.innerHTML = notifications.map(n => `
-        <div class="notification">
-            <strong>${escapeHTML(n.message)}</strong>
-            <small>${escapeHTML(n.time)}</small>
-        </div>
-    `).join("");
+    container.innerHTML = notifications.map((n, index) => {
+        const id = n.id || `legacy-${index}`;
+        return `
+            <div class="notification ${n.read ? "is-read" : "is-unread"}">
+                <div>
+                    <strong>${escapeHTML(n.message)}</strong>
+                    <small>${escapeHTML(n.time)}</small>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-light" onclick="toggleNotificationRead('${id}')">${n.read ? "Mark unread" : "Mark read"}</button>
+                    <button class="btn btn-danger" onclick="deleteNotification('${id}')">Delete</button>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+// SETTINGS
+
+const SETTINGS_KEY = "OralCareConnect_settings";
+
+function loadSettings() {
+    let settings = {};
+    try {
+        settings = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+    } catch (error) {
+        console.warn("Could not load clinic settings:", error);
+    }
+
+    const fields = {
+        settingClinicName: "clinicName",
+        settingPhone: "phone",
+        settingEmail: "email",
+        settingAddress: "address",
+        settingOpening: "opening",
+        settingClosing: "closing",
+        settingAdminName: "adminName"
+    };
+
+    Object.entries(fields).forEach(([elementId, key]) => {
+        const element = document.getElementById(elementId);
+        if (element && settings[key] !== undefined && settings[key] !== "") {
+            element.value = settings[key];
+        }
+    });
+
+    const adminEmail = document.getElementById("settingAdminEmail");
+    if (adminEmail) adminEmail.value = ADMIN_ACCOUNT.email;
+}
+
+const settingsForm = document.getElementById("settingsForm");
+if (settingsForm) {
+    settingsForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const settings = {
+            clinicName: document.getElementById("settingClinicName").value.trim(),
+            phone: document.getElementById("settingPhone").value.trim(),
+            email: document.getElementById("settingEmail").value.trim(),
+            address: document.getElementById("settingAddress").value.trim(),
+            opening: document.getElementById("settingOpening").value,
+            closing: document.getElementById("settingClosing").value,
+            adminName: document.getElementById("settingAdminName").value.trim()
+        };
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        if (currentUser && currentUser.role === "admin" && settings.adminName) {
+            currentUser.name = settings.adminName;
+            saveSession(currentUser);
+            document.getElementById("adminName").textContent = settings.adminName;
+            const avatar = document.querySelector("#adminApp .avatar");
+            if (avatar) avatar.textContent = settings.adminName.charAt(0).toUpperCase();
+        }
+        const message = document.getElementById("settingsMessage");
+        if (message) message.textContent = "Settings saved successfully.";
+    });
+
+    settingsForm.addEventListener("reset", function () {
+        setTimeout(loadSettings, 0);
+    });
 }
 
 // ADMIN DASHBOARD
@@ -1297,6 +1501,7 @@ function renderDashboard() {
                         <th>Customer</th>
                         <th>Date</th>
                         <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
 
@@ -1310,6 +1515,7 @@ function renderDashboard() {
                                     ${escapeHTML(a.status)}
                                 </span>
                             </td>
+                            <td><button class="btn btn-danger" onclick="deleteAppointment('${a.id}', 'admin')">Delete</button></td>
                         </tr>
                     `).join("")}
                 </tbody>
@@ -1403,7 +1609,9 @@ function renderCustomerPortal() {
                             ${
                                 ["Pending", "Approved"].includes(a.status)
                                     ? `<button class="btn btn-danger" onclick="cancelAppointment('${a.id}')">Cancel</button>`
-                                    : '<span class="muted">—</span>'
+                                    : a.status === "Cancelled"
+                                        ? `<button class="btn btn-danger" onclick="deleteAppointment('${a.id}', 'customer')">Delete</button>`
+                                        : '<span class="muted">—</span>'
                             }
                         </td>
                     </tr>
@@ -1465,6 +1673,7 @@ function renderAll() {
 // INITIALIZE APPLICATION
 
 loadData();
+loadSettings();
 
 const savedSession = getSession();
 
