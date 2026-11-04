@@ -109,7 +109,7 @@ const defaultServices = [
 const defaultDentists = [
     {
         id: 1,
-        name: "John Benedict Centeno",
+        name: "Praswel Jim Dimaano",
         specialty: "General Dentistry",
         bio: "Available for general dental appointments and consultations.",
         photo: ""
@@ -123,7 +123,7 @@ const defaultDentists = [
     },
     {
         id: 3,
-        name: "Praswel Jim Dimaano",
+        name: "John Benedict Centeno",
         specialty: "Orthodontics",
         bio: "Available for dental appointments and patient consultations.",
         photo: ""
