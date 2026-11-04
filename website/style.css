@@ -1,3 +1,4 @@
+
 /* =========================================
    ORALCARE CONNECT
    MAIN STYLESHEET
@@ -879,54 +880,52 @@ td .btn + .btn {
     gap: 20px;
 }
 
+#customerDentistList {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+}
+
 .dentist-card {
     background: var(--white);
-
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-
-    padding: 22px;
-
-    text-align: center;
-
+    border-radius: 14px;
+    overflow: hidden;
     transition: var(--transition);
 }
 
 .dentist-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-5px);
     box-shadow: var(--shadow-hover);
 }
 
 .dentist-photo {
-    width: 115px;
-    height: 115px;
-
-    margin: 0 auto 15px;
-
-    border-radius: 50%;
-    overflow: hidden;
-
+    width: 100%;
+    height: 260px;
+    display: block;
+    object-fit: cover;
+    object-position: center;
     background: var(--light-green);
+}
 
+.dentist-photo-placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.dentist-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.dentist-initials {
     color: var(--green);
-    font-size: 30px;
-    font-weight: 750;
+    font-size: 32px;
+    font-weight: 700;
 }
 
-.dentist-card h3 {
-    margin-bottom: 5px;
+.dentist-card-content {
+    padding: 20px;
+}
+
+.dentist-card-content h3 {
+    color: var(--green-dark);
+    font-size: 18px;
+    margin-bottom: 8px;
 }
 
 .dentist-specialty {
@@ -936,7 +935,7 @@ td .btn + .btn {
     margin-bottom: 10px;
 }
 
-.dentist-bio {
+.dentist-card-content p {
     color: var(--muted);
     font-size: 12px;
     line-height: 1.7;
@@ -1376,7 +1375,6 @@ td .btn + .btn {
     .content-grid {
         grid-template-columns: 1fr;
     }
-
 }
 
 
@@ -1438,7 +1436,6 @@ td .btn + .btn {
     .inline-form {
         grid-template-columns: 1fr;
     }
-
 }
 
 
@@ -1446,7 +1443,7 @@ td .btn + .btn {
    33. RESPONSIVE - MOBILE
 ========================================= */
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
 
     h1 {
         font-size: 23px;
@@ -1483,7 +1480,8 @@ td .btn + .btn {
     }
 
     .service-list,
-    .dentist-grid {
+    .dentist-grid,
+    #customerDentistList {
         grid-template-columns: 1fr;
     }
 
@@ -1522,4 +1520,7 @@ td .btn + .btn {
         padding: 22px 18px;
     }
 
+    .dentist-photo {
+        height: 240px;
+    }
 }
