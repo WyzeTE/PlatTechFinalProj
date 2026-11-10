@@ -41,7 +41,9 @@ public class Homefragment extends Fragment {
             empty.setVisibility(next == null ? View.VISIBLE : View.GONE);
             if (next != null) {
                 service.setText(next.service);
-                when.setText(next.date + ", " + next.time + " (" + next.status + ")");
+                String dentist = next.dentistOrEmpty();
+                when.setText(next.date + ", " + next.time + " (" + next.status + ")"
+                        + (dentist.isEmpty() ? "" : "\n" + dentist));
             }
         });
         return v;

@@ -15,6 +15,9 @@ import com.google.firebase.firestore.ListenerRegistration;
 import java.util.Locale;
 
 public class Queuefragment extends Fragment {
+    // Same look as the website: Q-001, Q-002, ...
+    private static final String QUEUE_FORMAT = "Q-%03d";
+
     private ListenerRegistration mineReg;
     private ListenerRegistration servReg;
     private String servDate = "";
@@ -83,13 +86,14 @@ public class Queuefragment extends Fragment {
         }
         content.setVisibility(View.VISIBLE);
         if (emptyQueue != null) emptyQueue.setVisibility(View.GONE);
-        subtitle.setText(next.date + ", " + next.service);
+        String dentist = next.dentistOrEmpty();
+        subtitle.setText(next.date + ", " + next.service + (dentist.isEmpty() ? "" : "\n" + dentist));
         status.setText(next.status == null ? "" : next.status.toUpperCase(Locale.ROOT));
-        number.setText(String.format(Locale.US, "A-%03d", next.queueNumber));
+        number.setText(String.format(Locale.US, QUEUE_FORMAT, next.queueNumber));
 
         int ahead = Math.max(0, next.queueNumber - serving - 1);
         wait.setText("Estimated wait: about " + (ahead * 15) + " minutes");
-        nowServing.setText(serving == 0 ? "-" : String.format(Locale.US, "A-%03d", serving));
+        nowServing.setText(serving == 0 ? "-" : String.format(Locale.US, QUEUE_FORMAT, serving));
         aheadText.setText(ahead + " people");
     }
 

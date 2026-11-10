@@ -10,7 +10,6 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private BottomNavigationView nav;
@@ -86,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 for (Appointment a : list) {
                     sb.append("• ").append(a.service)
+                            .append(a.dentistOrEmpty().isEmpty() ? "" : " with " + a.dentistOrEmpty())
                             .append(" (").append(a.date).append(") - Status: ")
                             .append(a.status == null ? "UNKNOWN" : a.status.toUpperCase()).append("\n\n");
                 }

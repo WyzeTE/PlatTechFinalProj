@@ -18,6 +18,7 @@ public class Repo {
 
     // Firestore field names and status values, written once so they can't be mistyped.
     private static final String STATUS = "status";
+    private static final String DENTIST = "dentist";
     private static final String DATE = "date";
     private static final String TIME = "time";
     private static final String QUEUE_NUMBER = "queueNumber";
@@ -69,12 +70,16 @@ public class Repo {
         return auth.getCurrentUser() == null ? "" : auth.getCurrentUser().getUid();
     }
 
-    // Times already booked on a date, so the app can grey them out.
-    public static void takenTimes(String date, Callback<Set<String>> cb) {
+    // Times already booked with one dentist on a date, so the app can grey them out.
+    // Each dentist has their own schedule. Older bookings with no dentist saved block the
+    // slot for everyone, to stay on the safe side.
+    public static void takenTimes(String date, String dentist, Callback<Set<String>> cb) {
         col.whereEqualTo(DATE, date).get().addOnSuccessListener(snap -> {
             Set<String> taken = new HashSet<>();
             for (DocumentSnapshot d : snap.getDocuments()) {
-                if (isActive(d.getString(STATUS))) {
+                String booked = d.getString(DENTIST);
+                boolean sameDentist = booked == null || booked.isEmpty() || booked.equals(dentist);
+                if (sameDentist && isActive(d.getString(STATUS))) {
                     taken.add(d.getString(TIME));
                 }
             }
@@ -82,14 +87,14 @@ public class Repo {
         });
     }
 
-    // A booking's document id is date + time (e.g. "2026-11-09_1030"), so one slot can
-    // only ever hold one document. The transaction checks that slot and writes the booking
-    // in one step, so two people can't both grab the same time.
+    // A booking's document id is date + time + dentist (e.g. "2026-11-09_1030_d2"), so one
+    // dentist's slot can only ever hold one document. The transaction checks that slot and
+    // writes the booking in one step, so two people can't both grab the same dentist and time.
     // Queue number = highest number already given that day + 1 (same rule the admin
     // website uses when it approves a booking; cancelled ones are set to 0 there).
-    public static void book(String name, String service, String date, String time,
+    public static void book(String name, String service, Catalog.Dentist dentist, String date, String time,
                             Runnable done, Callback<String> onError) {
-        DocumentReference ref = col.document(date + "_" + time.replace(":", ""));
+        DocumentReference ref = col.document(date + "_" + time.replace(":", "") + "_d" + dentist.id);
 
         col.whereEqualTo(DATE, date).get().addOnSuccessListener(snap -> {
             int max = 0;
@@ -104,7 +109,7 @@ public class Repo {
                 if (slot.exists() && isActive(slot.getString(STATUS))) {
                     return Boolean.FALSE;   // somebody already holds this slot
                 }
-                Appointment a = new Appointment(ref.getId(), uid(), name, service, date, time, queueNumber, "pending");
+                Appointment a = new Appointment(ref.getId(), uid(), name, service, dentist.name, date, time, queueNumber, "pending");
                 if (auth.getCurrentUser() != null && auth.getCurrentUser().getEmail() != null) {
                     a.email = auth.getCurrentUser().getEmail();
                 }
@@ -112,7 +117,7 @@ public class Repo {
                 return Boolean.TRUE;
             }).addOnSuccessListener(booked -> {
                 if (booked) done.run();
-                else onError.on("That time was just booked by someone else. Please pick another slot.");
+                else onError.on("That time was just booked with this dentist. Please pick another slot.");
             }).addOnFailureListener(e -> onError.on("Could not book: " + e.getLocalizedMessage()));
         }).addOnFailureListener(e -> onError.on("Could not book: " + e.getLocalizedMessage()));
     }

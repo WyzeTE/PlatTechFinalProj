@@ -166,6 +166,41 @@
                         app:selectionRequired="true"
                         app:singleSelection="true" />
 
+                    <TextView
+                        android:id="@+id/serviceInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textColor="@color/muted"
+                        android:textSize="12sp" />
+
+                    <!-- Dentist Selection -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="SELECT DENTIST"
+                        android:textColor="@color/muted"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.05" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/dentistGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:selectionRequired="true"
+                        app:singleSelection="true" />
+
+                    <TextView
+                        android:id="@+id/dentistInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textColor="@color/muted"
+                        android:textSize="12sp" />
+
                     <!-- Popup DatePicker Field -->
                     <TextView
                         android:layout_width="wrap_content"

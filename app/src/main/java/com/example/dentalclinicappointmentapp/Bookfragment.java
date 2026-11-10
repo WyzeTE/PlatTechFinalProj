@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -24,12 +25,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Bookfragment extends Fragment {
-    private final String[] services = {"Check-up", "Cleaning", "Filling", "Braces"};
     private final String[] times = {
             "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30",
             "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"};
     private final List<LocalDate> days = new ArrayList<>();
 
+    private ChipGroup serviceGroup;
+    private ChipGroup dentistGroup;
     private ChipGroup dateGroup;
     private ChipGroup timeGroup;
     private TextInputEditText datePickerInput;
@@ -40,7 +42,10 @@ public class Bookfragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inf, @Nullable ViewGroup parent, @Nullable Bundle b) {
         View v = inf.inflate(R.layout.fragmentbook, parent, false);
-        ChipGroup serviceGroup = v.findViewById(R.id.serviceGroup);
+        serviceGroup = v.findViewById(R.id.serviceGroup);
+        dentistGroup = v.findViewById(R.id.dentistGroup);
+        TextView serviceInfo = v.findViewById(R.id.serviceInfo);
+        TextView dentistInfo = v.findViewById(R.id.dentistInfo);
         dateGroup = v.findViewById(R.id.dateGroup);
         timeGroup = v.findViewById(R.id.timeGroup);
         datePickerInput = v.findViewById(R.id.datePickerInput);
@@ -49,8 +54,17 @@ public class Bookfragment extends Fragment {
         View btnNotif = v.findViewById(R.id.btnNotification);
         if (btnNotif != null) btnNotif.setOnClickListener(x -> ((MainActivity) requireActivity()).showNotifications());
 
-        for (String s : services) serviceGroup.addView(makeChip(s));
+        // Visit type and dentist, same choices as the website. Both are filled in before the
+        // date chips below, because checking a date chip loads the time slots for the dentist.
+        for (Catalog.Service s : Catalog.SERVICES) serviceGroup.addView(makeChip(s.name));
         ((Chip) serviceGroup.getChildAt(0)).setChecked(true);
+        serviceInfo.setText(Catalog.SERVICES.get(0).description);
+        serviceGroup.setOnCheckedStateChangeListener((group, ids) ->
+                serviceInfo.setText(selectedService().description));
+
+        for (Catalog.Dentist d : Catalog.DENTISTS) dentistGroup.addView(makeChip(d.name));
+        ((Chip) dentistGroup.getChildAt(0)).setChecked(true);
+        dentistInfo.setText(Catalog.DENTISTS.get(0).specialty);
 
         for (String t : times) timeGroup.addView(makeChip(t));
 
@@ -66,6 +80,13 @@ public class Bookfragment extends Fragment {
             dateGroup.addView(makeChip(d.getDayOfWeek().toString().substring(0, 3) + " " + d.getDayOfMonth()));
         }
         ((Chip) dateGroup.getChildAt(0)).setChecked(true);
+
+        // A different dentist has a different schedule, so refresh the taken time slots.
+        // Set after the first load above so it can't fire before the date chips exist.
+        dentistGroup.setOnCheckedStateChangeListener((group, ids) -> {
+            dentistInfo.setText(selectedDentist().specialty);
+            loadTimes();
+        });
 
         // Popup Material DatePicker
         if (datePickerInput != null) {
@@ -93,9 +114,8 @@ public class Bookfragment extends Fragment {
             }
 
             String time = ((Chip) timeGroup.findViewById(timeId)).getText().toString();
-            String service = ((Chip) serviceGroup.findViewById(serviceGroup.getCheckedChipId())).getText().toString();
             confirm.setEnabled(false);   // stop double taps while saving
-            Repo.book(name, service, selectedDate(), time,
+            Repo.book(name, selectedService().name, selectedDentist(), selectedDate(), time,
                     () -> {
                         if (!isAdded()) return;
                         confirm.setEnabled(true);
@@ -149,11 +169,23 @@ public class Bookfragment extends Fragment {
         return days.get(Math.max(index, 0)).toString();
     }
 
+    private Catalog.Service selectedService() {
+        int index = serviceGroup.indexOfChild(serviceGroup.findViewById(serviceGroup.getCheckedChipId()));
+        return Catalog.SERVICES.get(Math.max(index, 0));
+    }
+
+    private Catalog.Dentist selectedDentist() {
+        int index = dentistGroup.indexOfChild(dentistGroup.findViewById(dentistGroup.getCheckedChipId()));
+        return Catalog.DENTISTS.get(Math.max(index, 0));
+    }
+
     private void loadTimes() {
         final String date = selectedDate();
-        Repo.takenTimes(date, taken -> {
+        final Catalog.Dentist dentist = selectedDentist();
+        Repo.takenTimes(date, dentist.name, taken -> {
             if (!isAdded()) return;   // screen may have closed while loading
-            if (!date.equals(selectedDate())) return;   // user already switched dates, ignore old answer
+            // user already switched date or dentist, so ignore this old answer
+            if (!date.equals(selectedDate()) || dentist != selectedDentist()) return;
             for (int i = 0; i < timeGroup.getChildCount(); i++) {
                 Chip c = (Chip) timeGroup.getChildAt(i);
                 if (c != null) {
