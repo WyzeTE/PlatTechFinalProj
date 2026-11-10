@@ -1,6 +1,9 @@
 package com.example.dentalclinicappointmentapp;
 
+import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +12,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.chip.Chip;
@@ -17,12 +22,18 @@ import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.DateValidatorPointForward;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.firestore.ListenerRegistration;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Bookfragment extends Fragment {
     private final String[] times = {
@@ -37,6 +48,22 @@ public class Bookfragment extends Fragment {
     private TextInputEditText datePickerInput;
     private String customSelectedDate = "";
     private boolean updatingChips = false;   // true while WE change the date chips in code
+
+    // Slots already booked for the chosen date and dentist (by the app or the website).
+    private Set<String> takenSlots = new HashSet<>();
+    private ListenerRegistration takenReg;
+    // Normal chip colours, saved so a chip can go back to them after being shown as "booked".
+    private ColorStateList defaultChipFill;
+    private ColorStateList defaultChipStroke;
+    // Re-checks the clock every 30 seconds so a slot fades out when its time passes.
+    private final Handler clock = new Handler(Looper.getMainLooper());
+    private final Runnable clockTick = new Runnable() {
+        @Override public void run() {
+            if (!isAdded()) return;
+            applyTimeStates();
+            clock.postDelayed(this, 30_000);
+        }
+    };
 
     @Nullable
     @Override
@@ -114,6 +141,14 @@ public class Bookfragment extends Fragment {
             }
 
             String time = ((Chip) timeGroup.findViewById(timeId)).getText().toString();
+
+            // The slot may have passed while the screen was open, so check again right now.
+            if (isPast(picked, time, LocalDateTime.now(ZoneId.systemDefault()))) {
+                Toast.makeText(requireContext(), "That time has already passed. Please pick a later slot.", Toast.LENGTH_SHORT).show();
+                applyTimeStates();
+                return;
+            }
+
             confirm.setEnabled(false);   // stop double taps while saving
             Repo.book(name, selectedService().name, selectedDentist(), selectedDate(), time,
                     () -> {
@@ -129,7 +164,16 @@ public class Bookfragment extends Fragment {
                     });
         });
 
+        clock.postDelayed(clockTick, 30_000);
         return v;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (takenReg != null) takenReg.remove();   // stop listening when the screen is gone
+        takenReg = null;
+        clock.removeCallbacks(clockTick);
     }
 
     private void showPopupDatePicker() {
@@ -182,19 +226,72 @@ public class Bookfragment extends Fragment {
     private void loadTimes() {
         final String date = selectedDate();
         final Catalog.Dentist dentist = selectedDentist();
-        Repo.takenTimes(date, dentist.name, taken -> {
+
+        // Stop listening to the previous date/dentist, then show the clock-based state straight away.
+        if (takenReg != null) takenReg.remove();
+        takenSlots = new HashSet<>();
+        applyTimeStates();
+
+        // Live list of booked slots. This runs again whenever someone books (app or website).
+        takenReg = Repo.listenTakenTimes(date, dentist.name, taken -> {
             if (!isAdded()) return;   // screen may have closed while loading
             // user already switched date or dentist, so ignore this old answer
             if (!date.equals(selectedDate()) || dentist != selectedDentist()) return;
-            for (int i = 0; i < timeGroup.getChildCount(); i++) {
-                Chip c = (Chip) timeGroup.getChildAt(i);
-                if (c != null) {
-                    boolean isTaken = taken.contains(c.getText().toString());
-                    c.setEnabled(!isTaken);
-                    if (isTaken && c.isChecked()) c.setChecked(false);   // don't keep a taken slot selected
-                }
-            }
+            takenSlots = taken;
+            applyTimeStates();
         });
+    }
+
+    // Sets every time chip to one of three looks:
+    //   available: normal and tappable
+    //   past:      faded and not tappable (the time has already gone by)
+    //   booked:    red and not tappable (someone else already has that slot)
+    // A slot that is both past and booked is shown as past.
+    private void applyTimeStates() {
+        if (timeGroup == null || timeGroup.getChildCount() == 0) return;
+
+        LocalDate date = LocalDate.parse(selectedDate());
+        LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
+        int danger = ContextCompat.getColor(requireContext(), R.color.danger);
+
+        for (int i = 0; i < timeGroup.getChildCount(); i++) {
+            Chip c = (Chip) timeGroup.getChildAt(i);
+            if (c == null) continue;
+
+            // Save the normal colours from the first chip, before anything gets restyled.
+            if (defaultChipFill == null) {
+                defaultChipFill = c.getChipBackgroundColor();
+                defaultChipStroke = c.getChipStrokeColor();
+            }
+
+            String time = c.getText().toString();
+            boolean past = isPast(date, time, now);
+            boolean booked = !past && takenSlots.contains(time);
+
+            c.setEnabled(!past && !booked);
+            if (!c.isEnabled() && c.isChecked()) c.setChecked(false);   // never keep an unavailable slot selected
+
+            if (booked) {
+                c.setChipBackgroundColor(ColorStateList.valueOf(ColorUtils.setAlphaComponent(danger, 40)));
+                c.setChipStrokeColor(ColorStateList.valueOf(danger));
+                c.setContentDescription(time + ", already booked");
+            } else {
+                if (defaultChipFill != null) c.setChipBackgroundColor(defaultChipFill);
+                if (defaultChipStroke != null) c.setChipStrokeColor(defaultChipStroke);
+                c.setContentDescription(past ? time + ", time has passed" : time);
+            }
+        }
+    }
+
+    // True when the slot's start time is now or earlier, in the phone's own time zone.
+    private static boolean isPast(LocalDate date, String time, LocalDateTime now) {
+        LocalTime slot;
+        try {
+            slot = LocalTime.parse(time);   // chips read like "09:30"
+        } catch (DateTimeParseException e) {
+            return false;
+        }
+        return !LocalDateTime.of(date, slot).isAfter(now);
     }
 
     // "Today" in the phone's own time zone.

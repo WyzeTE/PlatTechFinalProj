@@ -19,4 +19,9 @@
     <color name="mint">#E6ECDF</color>
     <color name="line">#D3DDD0</color>
     <color name="danger">#B3261E</color>
+
+    <!-- Progress tracker states -->
+    <color name="track_done">#7CB342</color>
+    <color name="track_waiting">#FBC02D</color>
+    <color name="track_error">#B3261E</color>
 </resources>
