@@ -1,13 +1,14 @@
 /* =========================================
    ORALCARE CONNECT
-   MAIN STYLESHEET
+   MAIN STYLESHEET (FINAL DESIGN + BACKGROUNDS + ADMIN POLISH)
 ========================================= */
 
 /* =========================================
-   1. COLOR VARIABLES
+   1. DESIGN TOKENS
 ========================================= */
 
 :root {
+    /* Brand palette */
     --green: #244B3A;
     --green-dark: #19392B;
     --green-light: #41634F;
@@ -16,27 +17,94 @@
     --cream: #FAF9F6;
     --white: #FFFFFF;
 
-    --text: #26352D;
-    --muted: #89938B;
-    --border: #E8EAE5;
+    /* Surfaces and lines */
     --light-green: #EDF2ED;
+    --surface-soft: #F5F8F4;
+    --border: #E6E9E3;
+    --border-strong: #D5DCD3;
 
-    --danger: #B84A4A;
+    /* Text */
+    --text: #26352D;
+    --muted: #66736A;
+    --placeholder: #7E8981;
+
+    /* Semantic colors */
+    --danger: #A63D3D;
     --danger-light: #FCEEEE;
+    --danger-border: #F2D5D5;
 
-    --warning: #B7791F;
-    --warning-light: #FFF5DF;
+    --warning: #9A6516;
+    --warning-light: #FFF6E0;
+    --warning-border: #F0E0B8;
 
-    --success: #32805B;
+    --success: #2B6F4E;
+    --success-dark: #225A3F;
     --success-light: #EAF5EE;
 
-    --shadow: 0 5px 20px rgba(25, 57, 43, 0.06);
-    --shadow-hover: 0 10px 28px rgba(25, 57, 43, 0.12);
+    --info: #25618F;
+    --info-light: #E9F3FC;
 
-    --radius: 12px;
-    --radius-small: 8px;
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(25, 57, 43, 0.04);
+    --shadow: 0 4px 18px rgba(25, 57, 43, 0.06);
+    --shadow-hover: 0 12px 28px rgba(25, 57, 43, 0.11);
+    --shadow-modal: 0 20px 50px rgba(15, 30, 22, 0.22);
 
-    --transition: all 0.25s ease;
+    /* Radius */
+    --radius: 14px;
+    --radius-small: 10px;
+    --radius-large: 20px;
+
+    /* Spacing scale */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+
+    /* Type scale */
+    --fs-xs: 11px;
+    --fs-sm: 12px;
+    --fs-base: 14px;
+    --fs-md: 16px;
+    --fs-lg: 18px;
+    --fs-xl: 22px;
+    --fs-2xl: 28px;
+
+    /* Layout */
+    --sidebar-w: 260px;
+    --header-h: 72px;
+    --pad: 36px;
+    --content-max: 1320px;
+
+    --transition: all 0.22s ease;
+
+    /* Background system (CSS-generated, no image files) */
+    --bg-pattern-opacity: 0.04;
+    --bg-pattern-size: 180px;
+
+    /* Tooth-outline pattern tile: two teeth, a plus, and soft rings */
+    --tooth-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180' fill='none' stroke='%23244B3A' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(22 20) rotate(-12 12 12) scale(1.6)'%3E%3Cpath vector-effect='non-scaling-stroke' d='M7.5 3C5 3 3.5 5 3.5 7.5c0 2 .7 3.3 1.2 5.2.5 2 .6 4.3 1.4 6.2.4 1 1.3 1.6 2.1 1.1.9-.6 1.2-2.4 1.6-3.4.3-.8.8-1.3 1.4-1.3s1.1.5 1.4 1.3c.4 1 .7 2.8 1.6 3.4.8.5 1.7-.1 2.1-1.1.8-1.9.9-4.2 1.4-6.2.5-1.9 1.2-3.2 1.2-5.2C20.5 5 19 3 16.5 3c-1.8 0-2.8.8-4.5.8S9.3 3 7.5 3z'/%3E%3C/g%3E%3Cg transform='translate(104 96) rotate(14 12 12) scale(1.15)'%3E%3Cpath vector-effect='non-scaling-stroke' d='M7.5 3C5 3 3.5 5 3.5 7.5c0 2 .7 3.3 1.2 5.2.5 2 .6 4.3 1.4 6.2.4 1 1.3 1.6 2.1 1.1.9-.6 1.2-2.4 1.6-3.4.3-.8.8-1.3 1.4-1.3s1.1.5 1.4 1.3c.4 1 .7 2.8 1.6 3.4.8.5 1.7-.1 2.1-1.1.8-1.9.9-4.2 1.4-6.2.5-1.9 1.2-3.2 1.2-5.2C20.5 5 19 3 16.5 3c-1.8 0-2.8.8-4.5.8S9.3 3 7.5 3z'/%3E%3C/g%3E%3Cpath d='M138 30v14M131 37h14'/%3E%3Ccircle cx='70' cy='128' r='6'/%3E%3Ccircle cx='158' cy='160' r='2.5'/%3E%3Ccircle cx='24' cy='100' r='2'/%3E%3C/svg%3E");
+
+    /* Line icons (used as CSS masks, so they take the text color) */
+    --ic-dashboard: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1.5'/%3E%3C/svg%3E");
+    --ic-calendar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='16' rx='2.5'/%3E%3Cpath d='M3 9.5h18M8 2.5v4M16 2.5v4'/%3E%3C/svg%3E");
+    --ic-queue: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6h11M9 12h11M9 18h11'/%3E%3Cpath d='M4 6h.01M4 12h.01M4 18h.01'/%3E%3C/svg%3E");
+    --ic-tooth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 3C5 3 3.5 5 3.5 7.5c0 2 .7 3.3 1.2 5.2.5 2 .6 4.3 1.4 6.2.4 1 1.3 1.6 2.1 1.1.9-.6 1.2-2.4 1.6-3.4.3-.8.8-1.3 1.4-1.3s1.1.5 1.4 1.3c.4 1 .7 2.8 1.6 3.4.8.5 1.7-.1 2.1-1.1.8-1.9.9-4.2 1.4-6.2.5-1.9 1.2-3.2 1.2-5.2C20.5 5 19 3 16.5 3c-1.8 0-2.8.8-4.5.8S9.3 3 7.5 3z'/%3E%3C/svg%3E");
+    --ic-user: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4 3.6-7 8-7s8 3 8 7'/%3E%3C/svg%3E");
+    --ic-bell: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8'/%3E%3Cpath d='M10.3 20a2 2 0 0 0 3.4 0'/%3E%3C/svg%3E");
+    --ic-clock: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E");
+    --ic-sliders: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h10M18 7h2M4 17h2M10 17h10'/%3E%3Ccircle cx='16' cy='7' r='2'/%3E%3Ccircle cx='8' cy='17' r='2'/%3E%3C/svg%3E");
+    --ic-logout: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/%3E%3Cpath d='M16 17l5-5-5-5M21 12H9'/%3E%3C/svg%3E");
+    --ic-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8 12.5l3 3 5-6'/%3E%3C/svg%3E");
+
+    /* Colored icons (used as background images) */
+    --ic-bell-green: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2341634F' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8'/%3E%3Cpath d='M10.3 20a2 2 0 0 0 3.4 0'/%3E%3C/svg%3E");
+    --ic-bell-white: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8'/%3E%3Cpath d='M10.3 20a2 2 0 0 0 3.4 0'/%3E%3C/svg%3E");
+    --ic-user-green: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2341634F' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4 3.6-7 8-7s8 3 8 7'/%3E%3C/svg%3E");
 }
 
 
@@ -55,11 +123,17 @@ html {
 }
 
 body {
-    font-family: "Segoe UI", Arial, sans-serif;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
     background: var(--cream);
     color: var(--text);
-    font-size: 14px;
+    font-size: var(--fs-base);
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+img {
+    max-width: 100%;
 }
 
 button,
@@ -94,6 +168,17 @@ textarea {
     color: var(--green-dark);
 }
 
+:focus-visible {
+    outline: 2px solid var(--green-light);
+    outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: none;
+}
+
 
 /* =========================================
    3. TYPOGRAPHY
@@ -105,20 +190,26 @@ h3,
 h4 {
     color: var(--green-dark);
     line-height: 1.3;
+    letter-spacing: -0.01em;
 }
 
 h1 {
-    font-size: 27px;
+    font-size: var(--fs-2xl);
     font-weight: 700;
 }
 
 h2 {
-    font-size: 21px;
+    font-size: var(--fs-xl);
     font-weight: 650;
 }
 
 h3 {
-    font-size: 17px;
+    font-size: var(--fs-md);
+    font-weight: 650;
+}
+
+h4 {
+    font-size: var(--fs-base);
     font-weight: 650;
 }
 
@@ -132,12 +223,12 @@ p {
 }
 
 .page-heading {
-    margin-bottom: 25px;
+    margin-bottom: var(--space-6);
 }
 
 .page-heading p {
     color: var(--muted);
-    margin-top: 5px;
+    margin-top: 4px;
 }
 
 
@@ -158,22 +249,19 @@ p {
 }
 
 .auth-brand img {
-    width: 245px;
-    height: 160px;
+    width: 200px;
+    height: 112px;
 }
 
-.sidebar-brand {
-    padding: 15px 20px 25px;
+.sidebar-brand,
+.customer-sidebar-brand {
+    padding: 14px 8px 18px;
 }
 
-.sidebar-brand img {
-    width: 190px;
-    height: 100px;
-}
-
-.customer-brand img {
-    width: 180px;
-    height: 85px;
+.sidebar-brand img,
+.customer-sidebar-brand img {
+    width: 170px;
+    height: 88px;
 }
 
 
@@ -193,10 +281,13 @@ p {
     border: 1px solid var(--green);
     border-radius: var(--radius-small);
 
-    padding: 11px 18px;
+    padding: 11px 20px;
+    min-height: 42px;
 
     font-weight: 600;
     font-size: 13px;
+    line-height: 1.2;
+    white-space: nowrap;
 
     transition: var(--transition);
 }
@@ -210,6 +301,7 @@ p {
 
 .btn:active {
     transform: translateY(0);
+    box-shadow: none;
 }
 
 .btn-light {
@@ -219,15 +311,15 @@ p {
 }
 
 .btn-light:hover {
-    background: #DFE9DF;
+    background: #E0EAE0;
     color: var(--green-dark);
-    border-color: #DFE9DF;
+    border-color: #E0EAE0;
 }
 
 .btn-danger {
     background: var(--danger-light);
     color: var(--danger);
-    border-color: #F3D8D8;
+    border-color: var(--danger-border);
 }
 
 .btn-danger:hover {
@@ -243,11 +335,31 @@ p {
 }
 
 .btn-success:hover {
-    background: #246744;
+    background: var(--success-dark);
+    border-color: var(--success-dark);
 }
 
 .full-width {
     width: 100%;
+}
+
+/* Compact buttons inside tables, lists and notification rows */
+td .btn,
+.dentist-item .btn,
+.notification-actions .btn,
+.reschedule-request .btn {
+    min-height: 0;
+    padding: 7px 12px;
+    font-size: 12px;
+    box-shadow: none;
+}
+
+td .btn:hover,
+.dentist-item .btn:hover,
+.notification-actions .btn:hover,
+.reschedule-request .btn:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 
@@ -266,48 +378,95 @@ label {
 input,
 select,
 textarea {
-    border: 1px solid var(--border);
-    background: var(--white);
+    min-height: 44px;
+
+    border: 1px solid var(--border-strong);
+    background-color: var(--white);
     color: var(--text);
 
     border-radius: var(--radius-small);
-    padding: 11px 13px;
+    padding: 11px 14px;
 
-    font-size: 13px;
+    font-size: 13.5px;
     transition: var(--transition);
 }
 
 input::placeholder,
 textarea::placeholder {
-    color: #A5AEA7;
+    color: var(--placeholder);
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+    border-color: var(--sage);
 }
 
 input:focus,
 select:focus,
 textarea:focus {
     border-color: var(--green-light);
-    box-shadow: 0 0 0 3px rgba(65, 99, 79, 0.10);
+    box-shadow: 0 0 0 3px rgba(65, 99, 79, 0.14);
 }
 
 textarea {
     resize: vertical;
-    min-height: 90px;
+    min-height: 96px;
 }
 
-form > label {
-    margin-top: 17px;
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 40px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%2341634F' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 12px 8px;
 }
 
-form > input,
-form > select,
-form > textarea,
-form > .password-field {
-    margin-bottom: 3px;
-}
-
-input:disabled {
-    background: #F1F2EF;
+input:disabled,
+select:disabled {
+    background-color: #F1F3EF;
+    color: var(--muted);
     cursor: not-allowed;
+}
+
+/* Consistent vertical rhythm for stacked forms */
+form > label {
+    margin-top: 18px;
+}
+
+form > label:first-child {
+    margin-top: 0;
+}
+
+form > .password-field {
+    margin-bottom: 2px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+}
+
+form > .form-row:first-child {
+    margin-top: 0;
+}
+
+.optional {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    font-weight: 400;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
 }
 
 
@@ -322,1244 +481,30 @@ input:disabled {
 }
 
 .password-field input {
-    padding-right: 65px;
+    padding-right: 68px;
 }
 
 .password-toggle {
     position: absolute;
-    right: 10px;
+    right: 8px;
 
     border: none;
     background: transparent;
+    border-radius: 6px;
+    padding: 6px 8px;
 
     color: var(--green);
-    font-size: 12px;
+    font-size: var(--fs-sm);
     font-weight: 650;
 }
 
 .password-toggle:hover {
-    color: var(--green-light);
-}
-
-
-/* =========================================
-   8. MESSAGES
-========================================= */
-
-.error {
-    color: var(--danger);
-    font-size: 12px;
-    margin: 8px 0;
-}
-
-.success {
-    color: var(--success);
-    font-size: 12px;
-    margin: 8px 0;
-}
-
-.error:empty,
-.success:empty {
-    display: none;
-}
-
-
-/* =========================================
-   9. AUTHENTICATION
-========================================= */
-
-.auth-section {
-    min-height: 100vh;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 35px 18px;
-
-    background:
-        radial-gradient(
-            circle at top left,
-            rgba(168, 181, 160, 0.20),
-            transparent 40%
-        ),
-        var(--cream);
-}
-
-.auth-card {
-    width: 100%;
-    max-width: 440px;
-
-    background: var(--white);
-
-    border: 1px solid var(--border);
-    border-radius: 18px;
-
-    padding: 35px 38px;
-
-    box-shadow: var(--shadow);
-    animation: fadeIn 0.4s ease;
-}
-
-.auth-subtitle {
-    text-align: center;
-    color: var(--muted);
-    font-size: 12px;
-    margin: 0 0 25px;
-}
-
-.auth-card h2 {
-    text-align: center;
-    margin-bottom: 5px;
-}
-
-.auth-card .description {
-    text-align: center;
-    margin-bottom: 22px;
-}
-
-.auth-card form {
-    margin-top: 15px;
-}
-
-.auth-card form > label {
-    margin-top: 15px;
-}
-
-.auth-card form > button {
-    margin-top: 20px;
-}
-
-.auth-switch {
-    margin-top: 23px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 13px;
-}
-
-.auth-switch button {
-    background: transparent;
-    border: none;
-    color: var(--green);
-    font-weight: 700;
-}
-
-.auth-switch button:hover {
-    text-decoration: underline;
-}
-
-
-/* =========================================
-   10. ADMIN APPLICATION LAYOUT
-========================================= */
-
-.app {
-    min-height: 100vh;
-}
-
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-
-    width: 250px;
-
-    display: flex;
-    flex-direction: column;
-
-    padding: 10px 15px;
-
-    background: var(--white);
-    border-right: 1px solid var(--border);
-
-    overflow-y: auto;
-    z-index: 100;
-
-    transition: var(--transition);
-}
-
-.nav-label {
-    color: var(--muted);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-
-    padding: 20px 12px 9px;
-}
-
-.nav-item {
-    width: 100%;
-
-    display: flex;
-    align-items: center;
-
-    padding: 12px 14px;
-    margin-bottom: 4px;
-
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-
-    color: #69756D;
-    text-align: left;
-
-    font-size: 13px;
-    font-weight: 550;
-
-    transition: var(--transition);
-}
-
-.nav-item:hover {
-    background: var(--light-green);
-    color: var(--green);
-}
-
-.nav-item.active {
-    background: var(--green);
-    color: var(--white);
-    font-weight: 650;
-}
-
-.logout-btn {
-    color: var(--danger);
-}
-
-.logout-btn:hover {
-    background: var(--danger-light);
-    color: var(--danger);
-}
-
-.main {
-    margin-left: 250px;
-    min-height: 100vh;
-    padding: 0 30px 35px;
-}
-
-
-/* =========================================
-   11. TOPBAR
-========================================= */
-
-.topbar {
-    min-height: 82px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 30px;
-}
-
-.topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.topbar h2 {
-    font-size: 19px;
-}
-
-.profile {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.profile strong {
-    font-size: 13px;
-}
-
-.avatar {
-    width: 38px;
-    height: 38px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 50%;
-
-    background: var(--light-green);
-    color: var(--green);
-
-    font-weight: 700;
-}
-
-.mobile-menu {
-    display: none;
-
-    border: none;
-    background: transparent;
-
-    font-size: 22px;
-    color: var(--green);
-}
-
-
-/* =========================================
-   12. PAGE NAVIGATION
-========================================= */
-
-.page {
-    display: none;
-    animation: fadeIn 0.3s ease;
-}
-
-.page.active {
-    display: block;
-}
-
-
-/* =========================================
-   13. CARDS
-========================================= */
-
-.card {
-    background: var(--white);
-
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-
-    padding: 23px;
-
-    box-shadow: var(--shadow);
-    transition: var(--transition);
-}
-
-.card:hover {
-    border-color: #DCE5DC;
-}
-
-.section-title {
-    margin-bottom: 18px;
-}
-
-.section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.content-grid {
-    display: grid;
-    grid-template-columns: 1.6fr 1fr;
-    gap: 20px;
-    margin-bottom: 22px;
-}
-
-
-/* =========================================
-   14. STATISTICS
-========================================= */
-
-.stats {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 17px;
-    margin-bottom: 23px;
-}
-
-.stat-title {
-    color: var(--muted);
-    font-size: 12px;
-    margin-bottom: 10px;
-}
-
-.stat-number {
-    font-size: 30px;
-    color: var(--green);
-    font-weight: 750;
-    font-variant-numeric: tabular-nums;
-}
-
-
-/* =========================================
-   15. QUEUE
-========================================= */
-
-.queue-number {
-    font-size: 40px;
-    font-weight: 750;
-    color: var(--green);
-    margin: 12px 0;
-    font-variant-numeric: tabular-nums;
-}
-
-#queue .card button,
-.content-grid .card button {
-    margin-top: 12px;
-}
-
-
-/* =========================================
-   16. TABLES
-========================================= */
-
-.table-wrap {
-    width: 100%;
-    overflow-x: auto;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 650px;
-}
-
-thead {
-    background: #F6F8F5;
-}
-
-th {
-    color: var(--muted);
-    text-align: left;
-
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-
-    padding: 14px 13px;
-    white-space: nowrap;
-}
-
-td {
-    padding: 14px 13px;
-
-    border-bottom: 1px solid var(--border);
-
-    font-size: 12px;
-    vertical-align: middle;
-}
-
-tbody tr:hover {
-    background: #FAFCFA;
-}
-
-tbody tr:last-child td {
-    border-bottom: none;
-}
-
-td .btn {
-    padding: 7px 10px;
-    font-size: 11px;
-    margin: 2px;
-}
-
-td .btn + .btn {
-    margin-left: 3px;
-}
-
-
-/* =========================================
-   17. STATUS BADGES
-========================================= */
-
-.status,
-.badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 5px 10px;
-
-    border-radius: 30px;
-
-    font-size: 10px;
-    font-weight: 700;
-
-    white-space: nowrap;
-}
-
-.status-pending {
-    color: var(--warning);
-    background: var(--warning-light);
-}
-
-.status-approved,
-.status-confirmed {
-    color: var(--success);
-    background: var(--success-light);
-}
-
-.status-serving {
-    color: #276AA0;
-    background: #E9F3FC;
-}
-
-.status-completed {
-    color: var(--green);
-    background: var(--light-green);
-}
-
-.status-cancelled,
-.status-rejected {
-    color: var(--danger);
-    background: var(--danger-light);
-}
-
-.status-default {
-    color: var(--muted);
-    background: #F0F1EE;
-}
-
-
-/* =========================================
-   18. SERVICES
-========================================= */
-
-.service-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
-}
-
-.service-card {
-    background: var(--white);
-
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-
-    padding: 22px;
-
-    transition: var(--transition);
-}
-
-.service-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-hover);
-    border-color: var(--sage);
-}
-
-.service-card h3 {
-    font-size: 16px;
-    margin-bottom: 9px;
-}
-
-.service-card p {
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.7;
-}
-
-.service-icon {
-    width: 45px;
-    height: 45px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 11px;
-
-    background: var(--light-green);
-    color: var(--green);
-
-    font-size: 20px;
-
-    margin-bottom: 15px;
-}
-
-.service-card .btn {
-    margin-top: 15px;
-}
-
-
-/* =========================================
-   19. DENTISTS
-========================================= */
-
-.dentist-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
-}
-
-#customerDentistList {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 24px;
-    margin-top: 20px;
-}
-
-.dentist-card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    transition: var(--transition);
-}
-
-.dentist-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-hover);
-}
-
-.dentist-photo {
-    width: 100%;
-    height: 260px;
-    display: block;
-    object-fit: cover;
-    object-position: center;
-    background: var(--light-green);
-}
-
-.dentist-photo-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--green);
-    font-size: 32px;
-    font-weight: 700;
-}
-
-.dentist-card-content {
-    padding: 20px;
-}
-
-.dentist-card-content h3 {
     color: var(--green-dark);
-    font-size: 18px;
-    margin-bottom: 8px;
-}
-
-.dentist-specialty {
-    color: var(--green-light);
-    font-size: 12px;
-    font-weight: 650;
-    margin-bottom: 10px;
-}
-
-.dentist-card-content p {
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.7;
-}
-
-.dentist-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-
-    padding: 15px 0;
-    border-bottom: 1px solid var(--border);
-}
-
-.dentist-item:last-child {
-    border-bottom: none;
-}
-
-.dentist-item h4 {
-    font-size: 13px;
-}
-
-.dentist-item p {
-    font-size: 11px;
-    color: var(--muted);
-}
-
-
-/* =========================================
-   20. INLINE FORMS
-========================================= */
-
-.inline-form {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 17px;
-    align-items: end;
-}
-
-.inline-form button {
-    justify-self: start;
-}
-
-
-/* =========================================
-   21. NOTIFICATIONS
-========================================= */
-
-.notification-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 18px;
-
-    padding: 17px 0;
-
-    border-bottom: 1px solid var(--border);
-}
-
-.notification-item:last-child {
-    border-bottom: none;
-}
-
-.notification-item.unread {
-    background: #F6F9F5;
-    border-radius: 8px;
-    padding: 15px;
-}
-
-.notification-content {
-    flex: 1;
-}
-
-.notification-content h4 {
-    font-size: 13px;
-    margin-bottom: 5px;
-}
-
-.notification-content p {
-    font-size: 12px;
-    color: var(--muted);
-}
-
-.notification-content small {
-    color: var(--muted);
-    font-size: 10px;
-}
-
-.notification-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.notification-actions button {
-    padding: 6px 9px;
-    font-size: 10px;
-}
-
-
-/* =========================================
-   22. SETTINGS
-========================================= */
-
-.settings-card {
-    max-width: 1000px;
-}
-
-.settings-form {
-    margin-top: 20px;
-}
-
-.settings-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
-}
-
-.settings-grid label {
-    margin-bottom: 8px;
-}
-
-.form-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.system-info {
-    border-top: 1px solid var(--border);
-    margin-top: 28px;
-    padding-top: 20px;
-}
-
-.system-info p {
-    font-size: 12px;
-    color: var(--muted);
-    margin: 7px 0;
-}
-
-
-/* =========================================
-   23. CUSTOMER APPLICATION
-========================================= */
-
-.customer-app {
-    min-height: 100vh;
-    padding-bottom: 100px;
-}
-
-.customer-header {
-    min-height: 95px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 10px 5%;
-
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-}
-
-.customer-profile {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.customer-profile strong {
-    font-size: 13px;
-}
-
-.customer-main {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 35px 5%;
-}
-
-.customer-page {
-    display: none;
-    animation: fadeIn 0.3s ease;
-}
-
-.customer-page.active {
-    display: block;
-}
-
-
-/* =========================================
-   24. CUSTOMER NAVIGATION
-========================================= */
-
-.customer-navigation {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 5px;
-
-    padding: 12px 15px;
-
-    background: var(--white);
-    border-top: 1px solid var(--border);
-
-    z-index: 90;
-
-    box-shadow: 0 -4px 15px rgba(25, 57, 43, 0.04);
-}
-
-.customer-nav-item {
-    border: none;
-    border-radius: 8px;
-
-    background: transparent;
-    color: var(--muted);
-
-    padding: 11px 17px;
-
-    font-size: 12px;
-    font-weight: 600;
-
-    transition: var(--transition);
-}
-
-.customer-nav-item:hover {
     background: var(--light-green);
-    color: var(--green);
-}
-
-.customer-nav-item.active {
-    background: var(--green);
-    color: var(--white);
-}
-
-
-/* =========================================
-   25. CUSTOMER FORMS
-========================================= */
-
-.form-card {
-    max-width: 650px;
-}
-
-.form-card form > label {
-    margin-top: 18px;
-}
-
-.form-card form > button {
-    margin-top: 22px;
-}
-
-
-/* =========================================
-   26. MODAL
-========================================= */
-
-.modal {
-    display: none;
-
-    position: fixed;
-    inset: 0;
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 20px;
-
-    background: rgba(20, 35, 27, 0.55);
-    backdrop-filter: blur(3px);
-
-    z-index: 500;
-}
-
-.modal.show,
-.modal.active {
-    display: flex;
-}
-
-.modal-content {
-    width: 100%;
-    max-width: 480px;
-    max-height: 90vh;
-    overflow-y: auto;
-
-    background: var(--white);
-
-    border-radius: 15px;
-    padding: 28px;
-
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.15);
-
-    animation: modalIn 0.25s ease;
-}
-
-.modal-content h2 {
-    margin-bottom: 20px;
-}
-
-.modal-content form > label {
-    margin-top: 15px;
-}
-
-.modal-content .form-actions {
-    margin-top: 22px;
-}
-
-
-/* =========================================
-   27. EMPTY STATES
-========================================= */
-
-.empty-state {
-    padding: 35px 15px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 13px;
-}
-
-.empty-state h3 {
-    color: var(--green);
-    margin-bottom: 7px;
-}
-
-.empty-state p {
-    color: var(--muted);
-}
-
-
-/* =========================================
-   28. ACTION BUTTONS
-========================================= */
-
-.action-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-}
-
-.action-group button {
-    font-size: 10px;
-    padding: 7px 9px;
-}
-
-.text-danger {
-    color: var(--danger);
-}
-
-.text-success {
-    color: var(--success);
-}
-
-
-/* =========================================
-   29. SCROLLBAR
-========================================= */
-
-::-webkit-scrollbar {
-    width: 7px;
-    height: 7px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #D5DDD5;
-    border-radius: 20px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--sage);
-}
-
-
-/* =========================================
-   30. ANIMATIONS
-========================================= */
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes modalIn {
-    from {
-        opacity: 0;
-        transform: translateY(15px) scale(0.98);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-
-/* =========================================
-   31. RESPONSIVE - TABLETS
-========================================= */
-
-@media (max-width: 1100px) {
-
-    .sidebar {
-        width: 220px;
-    }
-
-    .main {
-        margin-left: 220px;
-        padding-left: 22px;
-        padding-right: 22px;
-    }
-
-    .stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .service-list,
-    .dentist-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .content-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-
-/* =========================================
-   32. RESPONSIVE - SMALL TABLETS
-========================================= */
-
-@media (max-width: 750px) {
-
-    .sidebar {
-        transform: translateX(-100%);
-        width: 250px;
-    }
-
-    .sidebar.open {
-        transform: translateX(0);
-        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.12);
-    }
-
-    .main {
-        margin-left: 0;
-        padding: 0 18px 30px;
-    }
-
-    .mobile-menu {
-        display: block;
-    }
-
-    .topbar {
-        min-height: 70px;
-    }
-
-    .topbar h2 {
-        font-size: 17px;
-    }
-
-    .profile strong {
-        display: none;
-    }
-
-    .customer-main {
-        padding: 25px 18px;
-    }
-
-    .customer-navigation {
-        justify-content: flex-start;
-        overflow-x: auto;
-        flex-wrap: nowrap;
-    }
-
-    .customer-nav-item {
-        flex-shrink: 0;
-    }
-
-    .settings-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .inline-form {
-        grid-template-columns: 1fr;
-    }
-}
-
-
-/* =========================================
-   33. RESPONSIVE - MOBILE
-========================================= */
-
-@media (max-width: 600px) {
-
-    h1 {
-        font-size: 23px;
-    }
-
-    h2 {
-        font-size: 19px;
-    }
-
-    .auth-card {
-        padding: 27px 21px;
-    }
-
-    .auth-brand img {
-        width: 210px;
-        height: 135px;
-    }
-
-    .stats {
-        grid-template-columns: 1fr 1fr;
-        gap: 11px;
-    }
-
-    .stats .card {
-        padding: 16px;
-    }
-
-    .stat-number {
-        font-size: 25px;
-    }
-
-    .card {
-        padding: 17px;
-    }
-
-    .service-list,
-    .dentist-grid,
-    #customerDentistList {
-        grid-template-columns: 1fr;
-    }
-
-    .section-header {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .customer-header {
-        padding: 10px 15px;
-    }
-
-    .customer-brand img {
-        width: 145px;
-        height: 70px;
-    }
-
-    .customer-profile {
-        gap: 8px;
-    }
-
-    .customer-profile strong {
-        font-size: 11px;
-    }
-
-    .customer-profile .btn {
-        padding: 8px 10px;
-        font-size: 11px;
-    }
-
-    .queue-number {
-        font-size: 33px;
-    }
-
-    .modal-content {
-        padding: 22px 18px;
-    }
-
-    .dentist-photo {
-        height: 240px;
-    }
-}
-
-/* =========================================
-   34. UPDATED AUTHENTICATION FORMS
-========================================= */
-
-.form-row {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 13px;
-}
-
-.optional {
-    color: var(--muted);
-    font-size: 11px;
-    font-weight: 400;
-}
-
-.forgot-password-row {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 8px;
-}
-
-.forgot-password-row button {
-    background: transparent;
-    border: none;
-    color: var(--green);
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.forgot-password-row button:hover {
-    text-decoration: underline;
 }
 
 .password-strength {
-    margin: 9px 0 12px;
+    margin: 10px 0 4px;
 }
 
 .strength-track {
@@ -1567,8 +512,8 @@ td .btn + .btn {
     width: 100%;
     overflow: hidden;
     border-radius: 20px;
-    background: #E9ECE9;
-    margin-bottom: 5px;
+    background: #E8ECE7;
+    margin-bottom: 6px;
 }
 
 .strength-track span {
@@ -1581,7 +526,7 @@ td .btn + .btn {
 
 #strengthText {
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--fs-sm);
 }
 
 .password-strength.weak #strengthBar {
@@ -1601,51 +546,284 @@ td .btn + .btn {
 
 
 /* =========================================
-   35. CUSTOMER SIDEBAR LAYOUT
+   8. MESSAGES
 ========================================= */
+
+.error {
+    color: var(--danger);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    margin: 10px 0;
+}
+
+.success {
+    color: var(--success);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    margin: 10px 0;
+}
+
+.error:empty,
+.success:empty {
+    display: none;
+}
+
+
+/* =========================================
+   9. AUTHENTICATION (MORE VISIBLE BACKGROUND)
+========================================= */
+
+.auth-section {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 36px 18px;
+
+    /* Soft sage glows in the corners over a cream base */
+    background:
+        radial-gradient(48% 52% at 0% 0%, rgba(168, 181, 160, 0.34), transparent 70%),
+        radial-gradient(42% 46% at 100% 100%, rgba(65, 99, 79, 0.13), transparent 70%),
+        radial-gradient(34% 38% at 0% 100%, rgba(237, 242, 237, 0.95), transparent 70%),
+        var(--cream);
+}
+
+/* Tooth-outline pattern, fading out behind the card */
+.auth-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+
+    background-image: var(--tooth-pattern);
+    background-size: 200px 200px;
+    opacity: 0.12;
+
+    -webkit-mask-image: radial-gradient(ellipse at center, transparent 18%, #000 78%);
+    mask-image: radial-gradient(ellipse at center, transparent 18%, #000 78%);
+}
+
+/* Large organic shape in the top-right corner */
+.auth-section::after {
+    content: "";
+    position: absolute;
+    top: -220px;
+    right: -180px;
+    z-index: -1;
+    pointer-events: none;
+
+    width: 560px;
+    height: 560px;
+
+    border-radius: 58% 42% 55% 45% / 48% 58% 42% 52%;
+    background: linear-gradient(145deg, rgba(168, 181, 160, 0.38), rgba(168, 181, 160, 0.04));
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 450px;
+
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+
+    padding: 38px 40px 34px;
+
+    box-shadow: 0 10px 36px rgba(25, 57, 43, 0.09);
+    animation: fadeIn 0.4s ease;
+}
+
+.auth-subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    letter-spacing: 0.2px;
+    margin: 0 0 26px;
+}
+
+.auth-card h2 {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 6px;
+}
+
+.auth-card .description {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.auth-card form > button {
+    margin-top: 22px;
+}
+
+.forgot-password-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.forgot-password-row button {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 2px 4px;
+    color: var(--green);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+}
+
+.forgot-password-row button:hover {
+    color: var(--green-dark);
+    text-decoration: underline;
+}
+
+.auth-switch {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.auth-switch button {
+    background: transparent;
+    border: none;
+    color: var(--green);
+    font-weight: 700;
+}
+
+.auth-switch button:hover {
+    color: var(--green-dark);
+    text-decoration: underline;
+}
+
+
+/* =========================================
+   10. APP SHELL (ADMIN + CUSTOMER)
+========================================= */
+
+.app {
+    min-height: 100vh;
+}
 
 .customer-app {
     display: flex;
     min-height: 100vh;
-    padding-bottom: 0;
 }
 
+/* Shared sidebar */
+.sidebar,
 .customer-sidebar {
     position: fixed;
-    inset: 0 auto 0 0;
+    top: 0;
+    left: 0;
+    bottom: 0;
     z-index: 110;
+
+    width: var(--sidebar-w);
+
     display: flex;
     flex-direction: column;
-    width: 255px;
-    padding: 12px 15px 20px;
-    overflow-y: auto;
+
+    padding: 10px 16px 20px;
+
     background: var(--white);
     border-right: 1px solid var(--border);
+
+    overflow-y: auto;
     transition: var(--transition);
 }
 
-.customer-sidebar-brand {
-    padding: 10px 8px 18px;
+.nav-label {
+    color: var(--muted);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+
+    padding: 20px 12px 8px;
 }
 
-.customer-sidebar-brand img {
-    width: 190px;
-    height: 100px;
-    object-fit: contain;
+/* Shared nav item */
+.nav-item,
+.customer-nav-item {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    padding: 11px 14px;
+
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-small);
+
+    color: #5A675E;
+    text-align: left;
+
+    font-size: 13.5px;
+    font-weight: 550;
+
+    transition: var(--transition);
 }
 
+.nav-item {
+    margin-bottom: 3px;
+}
+
+.nav-item:hover,
+.customer-nav-item:hover {
+    background: var(--light-green);
+    color: var(--green);
+}
+
+.nav-item.active,
+.customer-nav-item.active {
+    background: var(--green);
+    color: var(--white);
+    font-weight: 650;
+}
+
+.logout-btn,
+.customer-logout {
+    color: var(--danger);
+}
+
+.logout-btn:hover,
+.customer-logout:hover {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.customer-logout {
+    margin-top: auto;
+}
+
+/* Customer sidebar extras */
 .customer-sidebar-profile {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 10px;
-    margin-bottom: 12px;
+
+    padding: 14px 12px;
+    margin-bottom: 8px;
+
     background: var(--light-green);
-    border-radius: var(--radius-small);
+    border-radius: var(--radius);
 }
 
 .customer-sidebar-profile .avatar {
     flex-shrink: 0;
+    background: var(--white);
 }
 
 .customer-sidebar-profile strong,
@@ -1654,121 +832,1480 @@ td .btn + .btn {
 }
 
 .customer-sidebar-profile strong {
-    font-size: 12px;
+    font-size: 13px;
+    line-height: 1.3;
     overflow-wrap: anywhere;
 }
 
 .customer-sidebar-profile small {
     color: var(--muted);
-    font-size: 10px;
+    font-size: var(--fs-xs);
 }
 
 .customer-navigation {
-    position: static;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 4px;
-    padding: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
+    gap: 3px;
 }
 
-.customer-nav-item {
-    width: 100%;
-    text-align: left;
-    padding: 12px 13px;
-}
-
-.customer-logout {
-    margin-top: auto;
-    color: var(--danger);
-}
-
-.customer-logout:hover {
-    background: var(--danger-light);
-    color: var(--danger);
+/* Main content areas */
+.main {
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+    padding: 0 var(--pad) 56px;
 }
 
 .customer-content {
-    width: calc(100% - 255px);
+    width: calc(100% - var(--sidebar-w));
     min-height: 100vh;
-    margin-left: 255px;
+    margin-left: var(--sidebar-w);
 }
 
+.page,
+.customer-page {
+    max-width: var(--content-max);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.customer-main {
+    max-width: calc(var(--content-max) + (var(--pad) * 2));
+    margin: 0 auto;
+    padding: 0 var(--pad) 56px;
+}
+
+
+/* =========================================
+   10B. APP BACKGROUNDS (ADMIN + CUSTOMER)
+   Very subtle. Sits behind all content.
+========================================= */
+
+.app,
+.customer-app {
+    position: relative;
+    isolation: isolate;
+}
+
+/* Admin: slightly more visible. Customer: lighter still. */
+.app {
+    --bg-pattern-opacity: 0.05;
+}
+
+.customer-app {
+    --bg-pattern-opacity: 0.032;
+}
+
+/* Layer 1: soft gradients and organic glows */
+.app::before,
+.customer-app::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+
+    background:
+        radial-gradient(55% 45% at 100% 0%, rgba(168, 181, 160, 0.20), transparent 70%),
+        radial-gradient(45% 40% at 0% 100%, rgba(237, 242, 237, 0.90), transparent 70%),
+        radial-gradient(30% 30% at 85% 95%, rgba(168, 181, 160, 0.10), transparent 70%),
+        var(--cream);
+}
+
+/* Layer 2: faint tooth-outline pattern, dimmer behind the content area */
+.app::after,
+.customer-app::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+
+    background-image: var(--tooth-pattern);
+    background-size: var(--bg-pattern-size) var(--bg-pattern-size);
+    opacity: var(--bg-pattern-opacity);
+
+    -webkit-mask-image: radial-gradient(ellipse at 60% 50%, rgba(0, 0, 0, 0.35), #000 100%);
+    mask-image: radial-gradient(ellipse at 60% 50%, rgba(0, 0, 0, 0.35), #000 100%);
+}
+
+
+/* =========================================
+   11. TOPBAR / HEADER
+========================================= */
+
+.topbar,
 .customer-header {
     position: sticky;
     top: 0;
     z-index: 80;
-    min-height: 82px;
-    padding: 10px 35px;
-    background: rgba(250, 249, 246, 0.96);
+
+    min-height: var(--header-h);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background: rgba(250, 249, 246, 0.92);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border-bottom: 1px solid var(--border);
 }
 
+.topbar {
+    margin: 0 calc(var(--pad) * -1) 32px;
+    padding: 0 var(--pad);
+}
+
+.customer-header {
+    padding: 0 var(--pad);
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.topbar h2,
 .customer-header h2 {
-    font-size: 19px;
+    font-size: var(--fs-md);
+    font-weight: 650;
+    color: var(--green-dark);
+}
+
+.profile,
+.customer-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile strong,
+.customer-profile strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
 }
 
 .customer-main {
-    max-width: 1500px;
-    padding: 30px 35px 45px;
+    padding-top: 32px;
+}
+
+.avatar {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--light-green);
+    border: 1px solid #DCE6DC;
+    color: var(--green);
+
+    font-weight: 700;
+}
+
+.mobile-menu {
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-small);
+    background: var(--white);
+
+    font-size: 20px;
+    line-height: 1;
+    color: var(--green);
+
+    transition: var(--transition);
+}
+
+.mobile-menu:hover {
+    background: var(--light-green);
+}
+
+
+/* =========================================
+   12. PAGE NAVIGATION
+========================================= */
+
+.page {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.page.active {
+    display: block;
+}
+
+.customer-page {
+    display: none;
+    width: 100%;
+    animation: fadeIn 0.3s ease;
+}
+
+.customer-page.active {
+    display: block;
+}
+
+
+/* =========================================
+   13. CARDS AND GRIDS
+========================================= */
+
+.card {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    padding: 24px;
+
+    box-shadow: var(--shadow-sm);
+}
+
+.card + .card {
+    margin-top: 24px;
+}
+
+/* Cards inside grids are spaced by the grid gap, not by margins */
+.content-grid > .card + .card,
+.stats > .card + .card {
+    margin-top: 0;
+}
+
+.section-title {
+    margin-bottom: 18px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.section-header h3 {
+    font-size: var(--fs-md);
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.content-grid .card > .btn {
+    margin: 12px 8px 0 0;
+}
+
+
+/* =========================================
+   14. STATISTICS
+========================================= */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
 }
 
 .customer-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.customer-page {
-    width: 100%;
+.stats .card {
+    padding: 20px 22px;
 }
 
-.customer-menu-toggle {
-    display: none;
+.stat-title {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.stat-number {
+    font-size: 32px;
+    line-height: 1.15;
+    color: var(--green);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
 
 /* =========================================
-   36. ACTIVITY LOGS
+   15. QUEUE
+========================================= */
+
+.queue-number {
+    font-size: 38px;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--green);
+    margin: 10px 0 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+h2.queue-number {
+    font-size: 30px;
+}
+
+#customerQueueStatus {
+    color: var(--muted);
+    font-size: 13px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+
+/* =========================================
+   16. TABLES
+========================================= */
+
+.table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+#dashboardAppointments table,
+#customerRecentAppointments table,
+#queueTable table {
+    min-width: 0;
+}
+
+thead th {
+    background: var(--surface-soft);
+}
+
+thead th:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+thead th:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+th {
+    color: var(--muted);
+    text-align: left;
+
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+
+    padding: 12px 16px;
+    white-space: nowrap;
+}
+
+td {
+    padding: 15px 16px;
+
+    border-bottom: 1px solid var(--border);
+
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+tbody tr {
+    transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+    background: #FAFCF9;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* =========================================
+   17. STATUS BADGES
+========================================= */
+
+.status,
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    padding: 4px 11px;
+
+    border-radius: 30px;
+
+    font-size: var(--fs-xs);
+    font-weight: 650;
+    letter-spacing: 0.2px;
+
+    white-space: nowrap;
+}
+
+.status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.75;
+}
+
+.status-pending {
+    color: var(--warning);
+    background: var(--warning-light);
+}
+
+.status-approved,
+.status-confirmed {
+    color: var(--success);
+    background: var(--success-light);
+}
+
+.status-serving,
+.status-waiting {
+    color: var(--info);
+    background: var(--info-light);
+}
+
+.status-waiting {
+    color: var(--warning);
+    background: var(--warning-light);
+}
+
+.status-completed {
+    color: var(--green);
+    background: var(--light-green);
+}
+
+.status-cancelled,
+.status-rejected {
+    color: var(--danger);
+    background: var(--danger-light);
+}
+
+.status-default {
+    color: var(--muted);
+    background: #F0F2EE;
+}
+
+
+/* =========================================
+   18. ACTION GROUPS AND RESCHEDULE
+========================================= */
+
+.action-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.reschedule-request {
+    margin-top: 10px;
+    padding: 10px 12px;
+
+    background: var(--warning-light);
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius-small);
+
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: var(--text);
+}
+
+.reschedule-request strong {
+    color: var(--warning);
+}
+
+.reschedule-request .action-group {
+    margin-top: 8px;
+}
+
+.reschedule-note {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: var(--fs-xs);
+}
+
+.text-danger {
+    color: var(--danger);
+}
+
+.text-success {
+    color: var(--success);
+}
+
+
+/* =========================================
+   19. SERVICES
+========================================= */
+
+.service-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.service-card {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+
+    transition: var(--transition);
+}
+
+.service-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--sage);
+}
+
+.service-card h3 {
+    font-size: var(--fs-md);
+    margin-bottom: 8px;
+}
+
+.service-card p {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.service-card .status {
+    margin-top: 16px;
+}
+
+.service-icon {
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: var(--light-green);
+    color: var(--green);
+
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1;
+
+    margin-bottom: 16px;
+}
+
+
+/* =========================================
+   20. DENTISTS
+========================================= */
+
+.dentist-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+}
+
+#customerDentistList {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+}
+
+.dentist-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.dentist-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--sage);
+}
+
+.dentist-photo {
+    width: 100%;
+    height: 270px;
+    display: block;
+    object-fit: cover;
+    object-position: center top;
+    background: var(--light-green);
+}
+
+.dentist-photo-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--light-green), #DCE7DC);
+    color: var(--green);
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.dentist-card-content {
+    padding: 20px 22px 24px;
+}
+
+.dentist-card-content h3 {
+    color: var(--green-dark);
+    font-size: var(--fs-lg);
+    margin-bottom: 6px;
+}
+
+.dentist-specialty {
+    color: var(--green-light);
+    font-size: var(--fs-sm);
+    font-weight: 650;
+    letter-spacing: 0.2px;
+    margin-bottom: 10px;
+}
+
+.dentist-card-content p {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.dentist-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.dentist-item:first-child {
+    padding-top: 0;
+}
+
+.dentist-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.dentist-item h4 {
+    font-size: 14px;
+}
+
+.dentist-item p {
+    font-size: var(--fs-sm);
+    color: var(--green-light);
+    font-weight: 600;
+}
+
+.dentist-item small {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+}
+
+
+/* =========================================
+   21. INLINE FORMS
+========================================= */
+
+.inline-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    align-items: end;
+}
+
+.inline-form button {
+    justify-self: start;
+}
+
+
+/* =========================================
+   22. NOTIFICATIONS
+========================================= */
+
+.notification-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+
+    padding: 16px 14px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item.unread {
+    background: var(--surface-soft);
+    border-radius: var(--radius-small);
+    border-bottom-color: transparent;
+    box-shadow: inset 3px 0 0 var(--green-light);
+}
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-content h4 {
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.notification-content p {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+}
+
+.notification-content small {
+    color: var(--muted);
+    font-size: var(--fs-xs);
+}
+
+.notification-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+
+/* =========================================
+   23. ACTIVITY LOGS
 ========================================= */
 
 .activity-description {
     color: var(--text);
-    font-size: 12px;
+    font-size: var(--fs-sm);
 }
 
 .activity-meta {
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--fs-xs);
 }
 
 
 /* =========================================
-   37. RESCHEDULE REQUEST
+   24. SETTINGS
 ========================================= */
 
-.reschedule-note {
-    display: block;
-    margin-top: 5px;
+.settings-card {
+    max-width: 1000px;
+}
+
+.settings-form {
+    margin-top: 20px;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.settings-grid label {
+    margin-bottom: 7px;
+}
+
+.system-info {
+    border-top: 1px solid var(--border);
+    margin-top: 28px;
+    padding-top: 20px;
+}
+
+.system-info p {
+    font-size: var(--fs-sm);
     color: var(--muted);
-    font-size: 10px;
+    margin: 6px 0;
+}
+
+.system-info strong {
+    color: var(--text);
 }
 
 
 /* =========================================
-   38. RESPONSIVE CUSTOMER SIDEBAR
+   25. CUSTOMER FORMS
+========================================= */
+
+.form-card {
+    max-width: 660px;
+}
+
+.form-card form > button {
+    margin-top: 24px;
+}
+
+
+/* =========================================
+   26. MODAL
+========================================= */
+
+.modal {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(20, 35, 27, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+
+    z-index: 500;
+}
+
+.modal.show,
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+    padding: 30px;
+
+    box-shadow: var(--shadow-modal);
+
+    animation: modalIn 0.25s ease;
+}
+
+.modal-content h2 {
+    margin-bottom: 8px;
+}
+
+.modal-content > .muted {
+    margin-bottom: 20px;
+}
+
+.modal-content > h2:last-child,
+.modal-content > h2 + form {
+    margin-top: 12px;
+}
+
+
+/* =========================================
+   27. EMPTY STATES
+========================================= */
+
+.empty-state {
+    padding: 40px 16px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    background: var(--surface-soft);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-small);
+}
+
+.empty-state h3 {
+    color: var(--green);
+    margin-bottom: 6px;
+}
+
+.empty-state p {
+    color: var(--muted);
+}
+
+
+/* =========================================
+   28. SCROLLBAR
+========================================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #D3DCD3;
+    border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--sage);
+}
+
+
+/* =========================================
+   29. ANIMATIONS
+========================================= */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+
+/* =========================================
+   30. ADMIN DASHBOARD REFINEMENTS
+   Everything below targets the admin portal only.
+========================================= */
+
+/* ---------- 30.1 Sidebar ---------- */
+
+.sidebar {
+    box-shadow: 4px 0 24px rgba(25, 57, 43, 0.03);
+}
+
+.sidebar-brand {
+    margin-bottom: 6px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.sidebar-brand + .nav-label {
+    padding-top: 18px;
+}
+
+/* Keep the Account section pinned to the bottom of the sidebar */
+.sidebar > p.nav-label:last-of-type {
+    margin-top: auto;
+}
+
+.sidebar .nav-item {
+    gap: 0;
+    padding: 11px 14px;
+}
+
+/* Icon slot (drawn with a CSS mask so it follows the text color) */
+.sidebar .nav-item::before {
+    content: "";
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin-right: 12px;
+    background-color: currentColor;
+    opacity: 0.85;
+
+    -webkit-mask-image: var(--icon);
+    mask-image: var(--icon);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+.sidebar .nav-item[onclick*="'dashboard'"]     { --icon: var(--ic-dashboard); }
+.sidebar .nav-item[onclick*="'appointments'"]  { --icon: var(--ic-calendar); }
+.sidebar .nav-item[onclick*="'queue'"]         { --icon: var(--ic-queue); }
+.sidebar .nav-item[onclick*="'services'"]      { --icon: var(--ic-tooth); }
+.sidebar .nav-item[onclick*="'dentists'"]      { --icon: var(--ic-user); }
+.sidebar .nav-item[onclick*="'notifications'"] { --icon: var(--ic-bell); }
+.sidebar .nav-item[onclick*="'activityLogs'"]  { --icon: var(--ic-clock); }
+.sidebar .nav-item[onclick*="'settings'"]      { --icon: var(--ic-sliders); }
+.sidebar .nav-item.logout-btn                  { --icon: var(--ic-logout); }
+
+.sidebar .nav-item:hover::before {
+    opacity: 1;
+}
+
+.sidebar .nav-item.active {
+    box-shadow: 0 6px 14px rgba(36, 75, 58, 0.20);
+}
+
+.sidebar .nav-item.active::before {
+    opacity: 1;
+}
+
+
+/* ---------- 30.2 Topbar ---------- */
+
+#adminApp .avatar {
+    background: var(--green);
+    border-color: var(--green);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(36, 75, 58, 0.22);
+}
+
+#adminApp .profile strong {
+    font-weight: 650;
+}
+
+
+/* ---------- 30.3 Page headings ---------- */
+
+#adminApp .page-heading h1 {
+    font-size: 26px;
+}
+
+#adminApp .section-title,
+#adminApp .section-header h3 {
+    font-size: 15px;
+}
+
+
+/* ---------- 30.4 Dashboard statistics ---------- */
+
+#dashboard .stats .card {
+    position: relative;
+    transition: var(--transition);
+}
+
+#dashboard .stats .card:hover {
+    border-color: var(--sage);
+    box-shadow: var(--shadow);
+}
+
+#dashboard .stats .card .stat-title {
+    padding-right: 52px;
+}
+
+/* Icon chip (background) */
+#dashboard .stats .card::before {
+    content: "";
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--chip-bg, var(--light-green));
+}
+
+/* Icon (mask) */
+#dashboard .stats .card::after {
+    content: "";
+    position: absolute;
+    top: 28px;
+    right: 28px;
+    width: 20px;
+    height: 20px;
+    background-color: var(--chip-fg, var(--green));
+
+    -webkit-mask-image: var(--chip-icon);
+    mask-image: var(--chip-icon);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+#dashboard .stats .card:nth-child(1) {
+    --chip-bg: var(--light-green);
+    --chip-fg: var(--green);
+    --chip-icon: var(--ic-calendar);
+}
+
+#dashboard .stats .card:nth-child(2) {
+    --chip-bg: var(--warning-light);
+    --chip-fg: var(--warning);
+    --chip-icon: var(--ic-clock);
+}
+
+#dashboard .stats .card:nth-child(3) {
+    --chip-bg: var(--success-light);
+    --chip-fg: var(--success);
+    --chip-icon: var(--ic-check);
+}
+
+#dashboard .stats .card:nth-child(4) {
+    --chip-bg: var(--info-light);
+    --chip-fg: var(--info);
+    --chip-icon: var(--ic-tooth);
+}
+
+
+/* ---------- 30.5 Dashboard queue overview ---------- */
+
+#dashboard .content-grid > .card:last-child {
+    box-shadow: inset 0 3px 0 var(--green), var(--shadow-sm);
+}
+
+
+/* ---------- 30.6 Admin tables ---------- */
+
+#adminApp td:first-child {
+    font-weight: 600;
+    color: var(--green-dark);
+}
+
+#adminApp tbody tr:hover {
+    background: var(--surface-soft);
+}
+
+#adminApp td .status {
+    vertical-align: middle;
+}
+
+
+/* ---------- 30.7 Queue management ---------- */
+
+#queue .content-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Now Serving: hero card */
+#queue .content-grid > .card:first-child {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(150deg, var(--green) 0%, var(--green-dark) 100%);
+    border-color: var(--green-dark);
+    box-shadow: 0 10px 28px rgba(25, 57, 43, 0.18);
+}
+
+#queue .content-grid > .card:first-child::after {
+    content: "";
+    position: absolute;
+    top: -80px;
+    right: -70px;
+    width: 250px;
+    height: 250px;
+    border-radius: 58% 42% 55% 45% / 48% 58% 42% 52%;
+    background: rgba(168, 181, 160, 0.18);
+    pointer-events: none;
+}
+
+#queue .content-grid > .card:first-child > * {
+    position: relative;
+    z-index: 1;
+}
+
+#queue .content-grid > .card:first-child .section-title {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+#queueCurrent {
+    color: var(--white);
+    font-size: 56px;
+    margin: 4px 0 18px;
+}
+
+#queue .content-grid > .card:first-child .btn {
+    background: var(--white);
+    border-color: var(--white);
+    color: var(--green);
+}
+
+#queue .content-grid > .card:first-child .btn:hover {
+    background: var(--cream);
+    border-color: var(--cream);
+    color: var(--green-dark);
+}
+
+/* Waiting card */
+#queue .content-grid > .card:last-child .section-title {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+#queueWaiting {
+    font-size: 56px;
+    margin: 4px 0 0;
+}
+
+#queueWaiting::after {
+    content: " in queue";
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--muted);
+}
+
+/* Queue number chips in the list */
+#queueTable td:first-child strong {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: var(--light-green);
+    color: var(--green);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.3px;
+}
+
+
+/* ---------- 30.8 Services (admin) ---------- */
+
+#serviceList .service-icon {
+    font-size: 0;
+    color: var(--green);
+}
+
+#serviceList .service-icon::before {
+    content: "";
+    width: 22px;
+    height: 22px;
+    background-color: currentColor;
+
+    -webkit-mask-image: var(--ic-tooth);
+    mask-image: var(--ic-tooth);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+
+/* ---------- 30.9 Dentist management ---------- */
+
+#dentistForm {
+    margin-top: 2px;
+}
+
+.dentist-item::before {
+    content: "";
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--light-green);
+    background-image: var(--ic-user-green);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 20px 20px;
+    border: 1px solid #DCE6DC;
+}
+
+.dentist-item > div {
+    flex: 1;
+    min-width: 0;
+}
+
+
+/* ---------- 30.10 Notifications ---------- */
+
+.notification-item::before {
+    content: "";
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: var(--light-green);
+    background-image: var(--ic-bell-green);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 18px 18px;
+}
+
+.notification-item.unread::before {
+    background-color: var(--green);
+    background-image: var(--ic-bell-white);
+}
+
+.notification-item.unread .notification-content h4 {
+    font-weight: 700;
+    color: var(--green-dark);
+}
+
+
+/* ---------- 30.11 Activity logs ---------- */
+
+#activityLogList td:first-child {
+    font-weight: 400;
+    font-size: var(--fs-sm);
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+#activityLogList td:nth-child(2) {
+    font-weight: 600;
+    color: var(--green-dark);
+}
+
+#activityLogList .activity-meta {
+    font-weight: 400;
+}
+
+#activityLogList td:nth-child(3) {
+    font-weight: 650;
+    color: var(--green-light);
+    white-space: nowrap;
+}
+
+#activityLogList td:nth-child(3)::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--sage);
+}
+
+
+/* ---------- 30.12 Settings ---------- */
+
+#settingsForm .form-actions {
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+}
+
+#settingsMessage:not(:empty) {
+    display: inline-block;
+    padding: 9px 14px;
+    border-radius: var(--radius-small);
+    background: var(--success-light);
+    margin-top: 20px;
+}
+
+#adminApp .system-info {
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 28px;
+    padding: 18px 20px;
+}
+
+#adminApp .system-info p:first-child {
+    margin-top: 0;
+}
+
+#adminApp .system-info p:last-child {
+    margin-bottom: 0;
+}
+
+
+/* =========================================
+   31. RESPONSIVE - SMALL DESKTOP / TABLET LANDSCAPE
+========================================= */
+
+@media (max-width: 1100px) {
+
+    :root {
+        --sidebar-w: 236px;
+        --pad: 28px;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .customer-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .service-list,
+    .dentist-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================
+   32. RESPONSIVE - TABLET (DRAWER SIDEBAR)
 ========================================= */
 
 @media (max-width: 900px) {
+
+    :root {
+        --pad: 22px;
+    }
+
+    .sidebar,
     .customer-sidebar {
+        width: 272px;
         transform: translateX(-100%);
         box-shadow: none;
     }
 
+    .sidebar.open,
     .customer-sidebar.open {
         transform: translateX(0);
-        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.12);
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.14);
+    }
+
+    .main {
+        margin-left: 0;
     }
 
     .customer-content {
@@ -1776,38 +2313,186 @@ td .btn + .btn {
         margin-left: 0;
     }
 
-    .customer-menu-toggle {
-        display: block;
+    .mobile-menu {
+        display: inline-flex;
     }
 
-    .customer-header {
-        padding: 10px 20px;
+    .customer-menu-toggle {
+        display: inline-flex;
     }
 
     .customer-main {
-        padding: 25px 20px 35px;
+        padding-top: 26px;
     }
 }
 
+
+/* =========================================
+   33. RESPONSIVE - MOBILE
+========================================= */
+
 @media (max-width: 600px) {
-    .form-row {
-        grid-template-columns: 1fr;
-        gap: 0;
+
+    :root {
+        --pad: 16px;
+        --header-h: 64px;
+        --bg-pattern-size: 150px;
     }
 
-    .customer-stats {
-        grid-template-columns: 1fr 1fr;
+    h1,
+    .page-heading h1,
+    #adminApp .page-heading h1 {
+        font-size: 23px;
     }
 
-    .customer-header {
-        min-height: 70px;
+    h2 {
+        font-size: 19px;
+    }
+
+    /* Lighter decoration on small screens */
+    .auth-section::before {
+        background-size: 150px 150px;
+        opacity: 0.10;
+    }
+
+    .auth-section::after {
+        top: -170px;
+        right: -150px;
+        width: 380px;
+        height: 380px;
+    }
+
+    .topbar {
+        margin-bottom: 24px;
     }
 
     .customer-main {
-        padding: 20px 14px 30px;
+        padding-top: 22px;
+        padding-bottom: 36px;
     }
 
+    .main {
+        padding-bottom: 36px;
+    }
+
+    .topbar h2,
     .customer-header h2 {
-        font-size: 16px;
+        font-size: 15px;
+    }
+
+    .profile strong {
+        display: none;
+    }
+
+    .customer-profile strong {
+        font-size: var(--fs-sm);
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .auth-card {
+        padding: 28px 20px 26px;
+    }
+
+    .auth-brand img {
+        width: 180px;
+        height: 100px;
+    }
+
+    .stats,
+    .customer-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .stats .card {
+        padding: 16px;
+    }
+
+    .stat-number {
+        font-size: 26px;
+    }
+
+    /* Hide stat icon chips on narrow cards */
+    #dashboard .stats .card::before,
+    #dashboard .stats .card::after {
+        display: none;
+    }
+
+    #dashboard .stats .card .stat-title {
+        padding-right: 0;
+    }
+
+    .card {
+        padding: 18px;
+    }
+
+    .content-grid,
+    #queue .content-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .service-list,
+    .dentist-grid,
+    #customerDentistList {
+        grid-template-columns: 1fr;
+    }
+
+    .section-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .inline-form,
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .queue-number {
+        font-size: 32px;
+    }
+
+    h2.queue-number {
+        font-size: 26px;
+    }
+
+    #queueCurrent,
+    #queueWaiting {
+        font-size: 44px;
+    }
+
+    /* Notifications: icon + text on one row, actions below */
+    .notification-item {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .notification-item .notification-content {
+        flex: 1 1 0;
+    }
+
+    .notification-item .notification-actions {
+        flex: 1 1 100%;
+        padding-left: 50px;
+    }
+
+    .dentist-item {
+        align-items: flex-start;
+    }
+
+    .modal-content {
+        padding: 24px 18px;
+    }
+
+    .dentist-photo {
+        height: 250px;
     }
 }
