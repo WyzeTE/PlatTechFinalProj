@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -27,6 +28,11 @@ public class MainActivity extends AppCompatActivity {
             else show(new Queuefragment());
             return true;
         });
+
+        // Tapping the tab you are already on closes any screen opened on top of it
+        // (Dentists, Services, My Account) and goes back to the tab itself.
+        nav.setOnItemReselectedListener(item ->
+                getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE));
 
         if (Repo.isLoggedIn()) {
             showMainTabs();
@@ -51,11 +57,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Signs out of Firebase Auth (the same accounts the website uses) and goes back to login.
+    // The logout is written to the activity log first (see Repo.signOut), then we leave.
     public void logout() {
-        Repo.signOut();
-        nav.setVisibility(View.GONE);
-        show(new Loginfragment());
-        Toast.makeText(this, "You have been logged out", Toast.LENGTH_SHORT).show();
+        Repo.signOut(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            nav.setVisibility(View.GONE);
+            show(new Loginfragment());
+            Toast.makeText(this, "You have been logged out", Toast.LENGTH_SHORT).show();
+        });
     }
 
     public void showMainTabs() {
@@ -72,7 +81,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void show(Fragment f) {
+        // A tab or the login screen replaces everything, including any screen opened with open().
+        getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         getSupportFragmentManager().beginTransaction().replace(R.id.container, f).commit();
+    }
+
+    // Opens a screen on top of the current tab (Dentists, Services, My Account).
+    // The phone's back button, or the arrow in the screen's header, returns to the tab.
+    public void open(Fragment f) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, f)
+                .addToBackStack(null)
+                .commit();
     }
 
     // Show Notification updates dialog
