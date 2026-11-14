@@ -6,11 +6,13 @@
     <meta name="description" content="OralCare Connect dental clinic appointment and queue management system">
     <title>OralCare Connect | Dental Clinic Appointment System</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="timeslots.css">
 
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="script.js" defer></script>
+    <script src="timeslots.js" defer></script>
 </head>
 <body>
 
@@ -501,8 +503,9 @@
                             <label for="customerAppointmentDate">Appointment Date</label>
                             <input type="date" id="customerAppointmentDate" required>
 
-                            <label for="customerAppointmentTime">Appointment Time</label>
-                            <input type="time" id="customerAppointmentTime" required>
+                            <label for="customerAppointmentTime" class="time-slot-label">Select Time Slot</label>
+                            <input type="time" id="customerAppointmentTime" hidden>
+                            <div id="customerTimeSlots" class="time-slots"></div>
 
                             <p id="bookingError" class="error" role="alert"></p>
                             <button type="submit" class="btn">Submit Appointment</button>
@@ -631,8 +634,9 @@
                 <label for="appointmentDate">Appointment Date</label>
                 <input type="date" id="appointmentDate" required>
 
-                <label for="appointmentTime">Appointment Time</label>
-                <input type="time" id="appointmentTime" required>
+                <label for="appointmentTime" class="time-slot-label">Select Time Slot</label>
+                <input type="time" id="appointmentTime" hidden>
+                <div id="adminTimeSlots" class="time-slots"></div>
 
                 <div class="form-actions">
                     <button type="submit" class="btn">Save Appointment</button>
@@ -654,8 +658,9 @@
                 <label for="rescheduleDate">New Appointment Date</label>
                 <input type="date" id="rescheduleDate" required>
 
-                <label for="rescheduleTime">New Appointment Time</label>
-                <input type="time" id="rescheduleTime" required>
+                <label for="rescheduleTime" class="time-slot-label">Select New Time Slot</label>
+                <input type="time" id="rescheduleTime" hidden>
+                <div id="rescheduleTimeSlots" class="time-slots"></div>
 
                 <p id="rescheduleError" class="error" role="alert"></p>
 

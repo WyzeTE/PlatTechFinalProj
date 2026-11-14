@@ -1,7 +1,7 @@
 /* =========================================
    ORALCARE CONNECT
    MAIN STYLESHEET
-   (FINAL DESIGN + BACKGROUNDS + ADMIN + CUSTOMER POLISH)
+   (FINAL DESIGN + ENHANCED BACKGROUNDS + ADMIN + CUSTOMER POLISH)
 ========================================= */
 
 /* =========================================
@@ -83,12 +83,34 @@
 
     --transition: all 0.22s ease;
 
-    /* Background system (CSS-generated, no image files) */
-    --bg-pattern-opacity: 0.04;
-    --bg-pattern-size: 180px;
+    /* =====================================
+       BACKGROUND SYSTEM
+       CSS-generated (inline SVG + gradients),
+       no image files required.
+       Controls: --bg-pattern-opacity and
+       --bg-glow-opacity (set per portal in 10B).
+    ===================================== */
+    --bg-pattern-opacity: 0.6;
+    --bg-pattern-size: 200px;
 
-    /* Tooth-outline pattern tile: two teeth, a plus, and soft rings */
-    --tooth-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180' fill='none' stroke='%23244B3A' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(22 20) rotate(-12 12 12) scale(1.6)'%3E%3Cpath vector-effect='non-scaling-stroke' d='M7.5 3C5 3 3.5 5 3.5 7.5c0 2 .7 3.3 1.2 5.2.5 2 .6 4.3 1.4 6.2.4 1 1.3 1.6 2.1 1.1.9-.6 1.2-2.4 1.6-3.4.3-.8.8-1.3 1.4-1.3s1.1.5 1.4 1.3c.4 1 .7 2.8 1.6 3.4.8.5 1.7-.1 2.1-1.1.8-1.9.9-4.2 1.4-6.2.5-1.9 1.2-3.2 1.2-5.2C20.5 5 19 3 16.5 3c-1.8 0-2.8.8-4.5.8S9.3 3 7.5 3z'/%3E%3C/g%3E%3Cg transform='translate(104 96) rotate(14 12 12) scale(1.15)'%3E%3Cpath vector-effect='non-scaling-stroke' d='M7.5 3C5 3 3.5 5 3.5 7.5c0 2 .7 3.3 1.2 5.2.5 2 .6 4.3 1.4 6.2.4 1 1.3 1.6 2.1 1.1.9-.6 1.2-2.4 1.6-3.4.3-.8.8-1.3 1.4-1.3s1.1.5 1.4 1.3c.4 1 .7 2.8 1.6 3.4.8.5 1.7-.1 2.1-1.1.8-1.9.9-4.2 1.4-6.2.5-1.9 1.2-3.2 1.2-5.2C20.5 5 19 3 16.5 3c-1.8 0-2.8.8-4.5.8S9.3 3 7.5 3z'/%3E%3C/g%3E%3Cpath d='M138 30v14M131 37h14'/%3E%3Ccircle cx='70' cy='128' r='6'/%3E%3Ccircle cx='158' cy='160' r='2.5'/%3E%3Ccircle cx='24' cy='100' r='2'/%3E%3C/svg%3E");
+    /* Fine tile: two tooth outlines, plus signs, rings */
+    --tooth-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200' fill='none' stroke='%23244B3A' stroke-opacity='.12' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(24 22) rotate(-12 12 12) scale(1.6)'%3E%3Cpath vector-effect='non-scaling-stroke' d='M7.5 3C5 3 3.5 5 3.5 7.5c0 2 .7 3.3 1.2 5.2.5 2 .6 4.3 1.4 6.2.4 1 1.3 1.6 2.1 1.1.9-.6 1.2-2.4 1.6-3.4.3-.8.8-1.3 1.4-1.3s1.1.5 1.4 1.3c.4 1 .7 2.8 1.6 3.4.8.5 1.7-.1 2.1-1.1.8-1.9.9-4.2 1.4-6.2.5-1.9 1.2-3.2 1.2-5.2C20.5 5 19 3 16.5 3c-1.8 0-2.8.8-4.5.8S9.3 3 7.5 3z'/%3E%3C/g%3E%3Cg transform='translate(118 108) rotate(14 12 12) scale(1.15)'%3E%3Cpath vector-effect='non-scaling-stroke' d='M7.5 3C5 3 3.5 5 3.5 7.5c0 2 .7 3.3 1.2 5.2.5 2 .6 4.3 1.4 6.2.4 1 1.3 1.6 2.1 1.1.9-.6 1.2-2.4 1.6-3.4.3-.8.8-1.3 1.4-1.3s1.1.5 1.4 1.3c.4 1 .7 2.8 1.6 3.4.8.5 1.7-.1 2.1-1.1.8-1.9.9-4.2 1.4-6.2.5-1.9 1.2-3.2 1.2-5.2C20.5 5 19 3 16.5 3c-1.8 0-2.8.8-4.5.8S9.3 3 7.5 3z'/%3E%3C/g%3E%3Cpath d='M156 30v14M149 37h14'/%3E%3Cpath d='M48 152v10M43 157h10'/%3E%3Ccircle cx='92' cy='72' r='5'/%3E%3Ccircle cx='176' cy='172' r='2.5'/%3E%3Ccircle cx='22' cy='108' r='2'/%3E%3C/svg%3E");
+
+    /* Sparse tile of tiny four-point sparkles (clean, polished feel) */
+    --bg-sparkle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' viewBox='0 0 360 360' fill='%2341634F' fill-opacity='.22'%3E%3Cpath transform='translate(70 90)' d='M0 -7C.9-2.4 2.4-.9 7 0C2.4.9.9 2.4 0 7C-.9 2.4-2.4.9-7 0C-2.4-.9-.9-2.4 0-7Z'/%3E%3Cpath transform='translate(250 40) scale(.7)' d='M0 -7C.9-2.4 2.4-.9 7 0C2.4.9.9 2.4 0 7C-.9 2.4-2.4.9-7 0C-2.4-.9-.9-2.4 0-7Z'/%3E%3Cpath transform='translate(300 250) scale(1.2)' d='M0 -7C.9-2.4 2.4-.9 7 0C2.4.9.9 2.4 0 7C-.9 2.4-2.4.9-7 0C-2.4-.9-.9-2.4 0-7Z'/%3E%3Cpath transform='translate(130 300) scale(.6)' d='M0 -7C.9-2.4 2.4-.9 7 0C2.4.9.9 2.4 0 7C-.9 2.4-2.4.9-7 0C-2.4-.9-.9-2.4 0-7Z'/%3E%3C/svg%3E");
+
+    /* Large soft tooth silhouettes (sage fill, thin outline, small shine) */
+    --bg-tooth-a: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='-3 -3 30 30' fill='none'%3E%3Cg transform='rotate(14 12 12)'%3E%3Cpath d='M7.5 3C5 3 3.5 5 3.5 7.5c0 2 .7 3.3 1.2 5.2.5 2 .6 4.3 1.4 6.2.4 1 1.3 1.6 2.1 1.1.9-.6 1.2-2.4 1.6-3.4.3-.8.8-1.3 1.4-1.3s1.1.5 1.4 1.3c.4 1 .7 2.8 1.6 3.4.8.5 1.7-.1 2.1-1.1.8-1.9.9-4.2 1.4-6.2.5-1.9 1.2-3.2 1.2-5.2C20.5 5 19 3 16.5 3c-1.8 0-2.8.8-4.5.8S9.3 3 7.5 3z' fill='%23A8B5A0' fill-opacity='.16' stroke='%2341634F' stroke-opacity='.20' stroke-width='1.2' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M6.9 6.4c.7-1.4 1.9-2 3.3-1.9' stroke='%23FFFFFF' stroke-opacity='.85' stroke-width='1.8' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
+
+    --bg-tooth-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='-3 -3 30 30' fill='none'%3E%3Cg transform='rotate(-16 12 12)'%3E%3Cpath d='M7.5 3C5 3 3.5 5 3.5 7.5c0 2 .7 3.3 1.2 5.2.5 2 .6 4.3 1.4 6.2.4 1 1.3 1.6 2.1 1.1.9-.6 1.2-2.4 1.6-3.4.3-.8.8-1.3 1.4-1.3s1.1.5 1.4 1.3c.4 1 .7 2.8 1.6 3.4.8.5 1.7-.1 2.1-1.1.8-1.9.9-4.2 1.4-6.2.5-1.9 1.2-3.2 1.2-5.2C20.5 5 19 3 16.5 3c-1.8 0-2.8.8-4.5.8S9.3 3 7.5 3z' fill='%23A8B5A0' fill-opacity='.14' stroke='%2341634F' stroke-opacity='.18' stroke-width='1.2' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M6.9 6.4c.7-1.4 1.9-2 3.3-1.9' stroke='%23FFFFFF' stroke-opacity='.85' stroke-width='1.8' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E");
+
+    /* Delicate concentric rings with one small accent dot */
+    --bg-rings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400' fill='none' stroke='%2341634F' stroke-width='1'%3E%3Ccircle cx='200' cy='200' r='64' stroke-opacity='.16'/%3E%3Ccircle cx='200' cy='200' r='110' stroke-opacity='.14' stroke-dasharray='2 7'/%3E%3Ccircle cx='200' cy='200' r='156' stroke-opacity='.12'/%3E%3Ccircle cx='200' cy='200' r='197' stroke-opacity='.08'/%3E%3Ccircle cx='200' cy='44' r='4' fill='%2341634F' fill-opacity='.2' stroke='none'/%3E%3C/svg%3E");
+
+    /* Seamless horizontal waves (tile left to right) */
+    --bg-wave-1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='200' viewBox='0 0 1200 200'%3E%3Cpath d='M0 110C200 40 400 40 600 110S1000 180 1200 110L1200 200L0 200Z' fill='%23A8B5A0' fill-opacity='.20'/%3E%3Cpath d='M0 110C200 40 400 40 600 110S1000 180 1200 110' fill='none' stroke='%23FFFFFF' stroke-opacity='.75' stroke-width='1.5'/%3E%3C/svg%3E");
+
+    --bg-wave-2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='200' viewBox='0 0 1200 200'%3E%3Cpath d='M0 140C200 196 400 196 600 140S1000 84 1200 140L1200 200L0 200Z' fill='%2341634F' fill-opacity='.07'/%3E%3C/svg%3E");
 
     /* Line icons (used as CSS masks, so they take the text color) */
     --ic-dashboard: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1.5'/%3E%3C/svg%3E");
@@ -576,7 +598,12 @@ form > .form-row:first-child {
 
 
 /* =========================================
-   9. AUTHENTICATION (MORE VISIBLE BACKGROUND)
+   9. AUTHENTICATION (LOGIN + SIGNUP)
+   BACKGROUND: the most expressive version.
+   Layers (bottom to top):
+   1. Cream base + mesh gradients  (.auth-section)
+   2. Fine tooth/sparkle pattern   (::before, fades behind the card)
+   3. Waves, large teeth, rings    (::after)
 ========================================= */
 
 .auth-section {
@@ -592,15 +619,25 @@ form > .form-row:first-child {
 
     padding: 36px 18px;
 
-    /* Soft sage glows in the corners over a cream base */
+    /* Decoration sizes (tuned per breakpoint in section 36) */
+    --deco-tooth-a: 460px;
+    --deco-tooth-b: 380px;
+    --deco-rings: 560px;
+    --deco-wave-w: 1200px;
+    --deco-wave-h: 200px;
+
+    /* Layered mesh gradient over a cream base */
     background:
-        radial-gradient(48% 52% at 0% 0%, rgba(168, 181, 160, 0.34), transparent 70%),
-        radial-gradient(42% 46% at 100% 100%, rgba(65, 99, 79, 0.13), transparent 70%),
-        radial-gradient(34% 38% at 0% 100%, rgba(237, 242, 237, 0.95), transparent 70%),
+        radial-gradient(60% 55% at 0% 0%, rgba(168, 181, 160, 0.42), transparent 70%),
+        radial-gradient(40% 45% at 100% 0%, rgba(168, 181, 160, 0.24), transparent 70%),
+        radial-gradient(50% 50% at 100% 100%, rgba(65, 99, 79, 0.18), transparent 70%),
+        radial-gradient(40% 40% at 0% 100%, rgba(237, 242, 237, 1), transparent 70%),
+        radial-gradient(38% 30% at 50% 0%, rgba(255, 255, 255, 0.9), transparent 70%),
+        linear-gradient(180deg, rgba(36, 75, 58, 0.06) 0%, transparent 28%),
         var(--cream);
 }
 
-/* Tooth-outline pattern, fading out behind the card */
+/* Fine pattern: tooth outlines, plus signs, rings and sparkles */
 .auth-section::before {
     content: "";
     position: absolute;
@@ -608,28 +645,45 @@ form > .form-row:first-child {
     z-index: -1;
     pointer-events: none;
 
-    background-image: var(--tooth-pattern);
-    background-size: 200px 200px;
-    opacity: 0.12;
+    background-image: var(--tooth-pattern), var(--bg-sparkle);
+    background-repeat: repeat, repeat;
+    background-size:
+        var(--bg-pattern-size) var(--bg-pattern-size),
+        calc(var(--bg-pattern-size) * 1.8) calc(var(--bg-pattern-size) * 1.8);
+    background-position: 0 0, 90px 60px;
+    opacity: 0.9;
 
     -webkit-mask-image: radial-gradient(ellipse at center, transparent 18%, #000 78%);
     mask-image: radial-gradient(ellipse at center, transparent 18%, #000 78%);
 }
 
-/* Large organic shape in the top-right corner */
+/* Scene: waves along the bottom, large teeth, rings in the corner */
 .auth-section::after {
     content: "";
     position: absolute;
-    top: -220px;
-    right: -180px;
+    inset: 0;
     z-index: -1;
     pointer-events: none;
 
-    width: 560px;
-    height: 560px;
-
-    border-radius: 58% 42% 55% 45% / 48% 58% 42% 52%;
-    background: linear-gradient(145deg, rgba(168, 181, 160, 0.38), rgba(168, 181, 160, 0.04));
+    background-image:
+        var(--bg-wave-1),
+        var(--bg-wave-2),
+        var(--bg-tooth-b),
+        var(--bg-tooth-a),
+        var(--bg-rings);
+    background-repeat: repeat-x, repeat-x, no-repeat, no-repeat, no-repeat;
+    background-size:
+        var(--deco-wave-w) var(--deco-wave-h),
+        var(--deco-wave-w) var(--deco-wave-h),
+        var(--deco-tooth-b) var(--deco-tooth-b),
+        var(--deco-tooth-a) var(--deco-tooth-a),
+        var(--deco-rings) var(--deco-rings);
+    background-position:
+        0 100%,
+        calc(var(--deco-wave-w) * -0.25) 100%,
+        left -70px bottom 60px,
+        right -90px top -60px,
+        left -150px top -150px;
 }
 
 .auth-card {
@@ -884,25 +938,37 @@ form > .form-row:first-child {
 
 /* =========================================
    10B. APP BACKGROUNDS (ADMIN + CUSTOMER)
-   Very subtle. Sits behind all content.
+   Fixed layers behind all content.
+   ::before = gradients, light, waves, rings, teeth
+   ::after  = fine tooth/sparkle pattern (dimmer
+              behind the content area)
+   Admin is slightly richer than the customer portal.
 ========================================= */
 
 .app,
 .customer-app {
     position: relative;
     isolation: isolate;
+
+    /* Decoration sizes (tuned per breakpoint in section 36) */
+    --app-tooth: 340px;
+    --app-rings: 500px;
+    --app-wave-w: 1200px;
+    --app-wave-h: 200px;
+    --app-tooth-left: 300px;
 }
 
-/* Admin: slightly more visible. Customer: lighter still. */
 .app {
-    --bg-pattern-opacity: 0.05;
+    --bg-pattern-opacity: 0.6;
+    --bg-glow-opacity: 0.9;
 }
 
 .customer-app {
-    --bg-pattern-opacity: 0.032;
+    --bg-pattern-opacity: 0.42;
+    --bg-glow-opacity: 0.72;
 }
 
-/* Layer 1: soft gradients and organic glows */
+/* Layer 1: soft lighting, gradients, waves, rings, large teeth */
 .app::before,
 .customer-app::before {
     content: "";
@@ -911,14 +977,41 @@ form > .form-row:first-child {
     z-index: -1;
     pointer-events: none;
 
-    background:
-        radial-gradient(55% 45% at 100% 0%, rgba(168, 181, 160, 0.20), transparent 70%),
-        radial-gradient(45% 40% at 0% 100%, rgba(237, 242, 237, 0.90), transparent 70%),
-        radial-gradient(30% 30% at 85% 95%, rgba(168, 181, 160, 0.10), transparent 70%),
-        var(--cream);
+    opacity: var(--bg-glow-opacity);
+
+    background-color: var(--cream);
+    background-image:
+        var(--bg-wave-1),
+        var(--bg-wave-2),
+        var(--bg-rings),
+        var(--bg-tooth-a),
+        var(--bg-tooth-b),
+        radial-gradient(55% 45% at 100% 0%, rgba(168, 181, 160, 0.26), transparent 70%),
+        radial-gradient(45% 40% at 0% 100%, rgba(237, 242, 237, 0.95), transparent 70%),
+        radial-gradient(35% 35% at 88% 92%, rgba(168, 181, 160, 0.16), transparent 70%),
+        radial-gradient(40% 30% at 30% 0%, rgba(255, 255, 255, 0.85), transparent 70%),
+        linear-gradient(180deg, transparent 55%, rgba(168, 181, 160, 0.10) 100%);
+    background-repeat:
+        repeat-x, repeat-x,
+        no-repeat, no-repeat, no-repeat,
+        no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+    background-size:
+        var(--app-wave-w) var(--app-wave-h),
+        var(--app-wave-w) var(--app-wave-h),
+        var(--app-rings) var(--app-rings),
+        var(--app-tooth) var(--app-tooth),
+        calc(var(--app-tooth) * 0.8) calc(var(--app-tooth) * 0.8),
+        auto, auto, auto, auto, auto;
+    background-position:
+        0 100%,
+        calc(var(--app-wave-w) * -0.3) 100%,
+        right -190px top -190px,
+        left var(--app-tooth-left) bottom -120px,
+        right -120px top 160px,
+        0 0, 0 0, 0 0, 0 0, 0 0;
 }
 
-/* Layer 2: faint tooth-outline pattern, dimmer behind the content area */
+/* Layer 2: faint tooth, plus-sign and sparkle pattern */
 .app::after,
 .customer-app::after {
     content: "";
@@ -927,8 +1020,12 @@ form > .form-row:first-child {
     z-index: -1;
     pointer-events: none;
 
-    background-image: var(--tooth-pattern);
-    background-size: var(--bg-pattern-size) var(--bg-pattern-size);
+    background-image: var(--tooth-pattern), var(--bg-sparkle);
+    background-repeat: repeat, repeat;
+    background-size:
+        var(--bg-pattern-size) var(--bg-pattern-size),
+        calc(var(--bg-pattern-size) * 1.8) calc(var(--bg-pattern-size) * 1.8);
+    background-position: 0 0, 90px 60px;
     opacity: var(--bg-pattern-opacity);
 
     -webkit-mask-image: radial-gradient(ellipse at 60% 50%, rgba(0, 0, 0, 0.35), #000 100%);
@@ -2864,19 +2961,6 @@ tbody tr:last-child td {
         font-size: 19px;
     }
 
-    /* Lighter decoration on small screens */
-    .auth-section::before {
-        background-size: 150px 150px;
-        opacity: 0.10;
-    }
-
-    .auth-section::after {
-        top: -170px;
-        right: -150px;
-        width: 380px;
-        height: 380px;
-    }
-
     .topbar {
         margin-bottom: 24px;
     }
@@ -3053,5 +3137,67 @@ tbody tr:last-child td {
 
     .dentist-photo {
         height: 250px;
+    }
+}
+
+
+/* =========================================
+   36. BACKGROUND RESPONSIVE TUNING
+   Background decoration sizes only. Scales the
+   waves, teeth and rings per screen size and moves
+   the bottom-left tooth clear of the sidebar.
+========================================= */
+
+@media (max-width: 1100px) {
+
+    .auth-section {
+        --deco-tooth-a: 420px;
+        --deco-tooth-b: 340px;
+        --deco-rings: 500px;
+    }
+
+    .app,
+    .customer-app {
+        --app-tooth-left: 260px;
+    }
+}
+
+@media (max-width: 900px) {
+
+    .auth-section {
+        --deco-tooth-a: 360px;
+        --deco-tooth-b: 290px;
+        --deco-rings: 440px;
+        --deco-wave-w: 900px;
+        --deco-wave-h: 150px;
+    }
+
+    /* The sidebar becomes a drawer, so the full width is visible */
+    .app,
+    .customer-app {
+        --app-tooth: 300px;
+        --app-rings: 420px;
+        --app-wave-w: 900px;
+        --app-wave-h: 150px;
+        --app-tooth-left: -40px;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .auth-section {
+        --deco-tooth-a: 280px;
+        --deco-tooth-b: 230px;
+        --deco-rings: 340px;
+        --deco-wave-w: 640px;
+        --deco-wave-h: 108px;
+    }
+
+    .app,
+    .customer-app {
+        --app-tooth: 240px;
+        --app-rings: 320px;
+        --app-wave-w: 640px;
+        --app-wave-h: 108px;
     }
 }
