@@ -24,11 +24,15 @@ public final class Catalog {
         public final int id;
         public final String name;
         public final String specialty;
+        public final String blurb;
+        public final int photo;   // drawable copied from the website's Assets/Dentists folder
 
-        private Dentist(int id, String name, String specialty) {
+        private Dentist(int id, String name, String specialty, String blurb, int photo) {
             this.id = id;
             this.name = name;
             this.specialty = specialty;
+            this.blurb = blurb;
+            this.photo = photo;
         }
     }
 
@@ -37,12 +41,22 @@ public final class Catalog {
             new Service("Cleaning", "Professional dental cleaning and scaling."),
             new Service("Filling", "Tooth restoration and dental filling service."),
             new Service("Braces", "Orthodontic consultation and adjustment."),
-            new Service("General Consultation", "General appointment and consultation service.")));
+            new Service("General Consultation", "General appointment and consultation service."),
+            // The four below show on the website's Services page, so patients can book them there.
+            // Names must match the website exactly. Only the Tooth Extraction description was
+            // readable in the screenshot; copy the real text for the other three from the website.
+            new Service("Tooth Extraction", "Dental examination and tooth extraction."),
+            new Service("Root Canal", "Root canal treatment for an infected or damaged tooth."),
+            new Service("Teeth Whitening", "Professional teeth whitening service."),
+            new Service("Denture", "Denture consultation, fitting and adjustment.")));
 
     public static final List<Dentist> DENTISTS = Collections.unmodifiableList(Arrays.asList(
-            new Dentist(1, "Praswel Jim Dimaano", "General Dentistry"),
-            new Dentist(2, "Clemence Valdez", "Dental Surgery"),
-            new Dentist(3, "John Benedict Centeno", "Orthodontics")));
+            new Dentist(1, "Praswel Jim Dimaano", "General Dentistry",
+                    "Available for general dental appointments and consultations.", R.drawable.dentist_praswel),
+            new Dentist(2, "Clemence Valdez", "Dental Surgery",
+                    "Available for dental appointments and patient consultations.", R.drawable.dentist_clemence),
+            new Dentist(3, "John Benedict Centeno", "Orthodontics",
+                    "Available for dental appointments and patient consultations.", R.drawable.dentist_benedict)));
 
     private Catalog() {}
 }

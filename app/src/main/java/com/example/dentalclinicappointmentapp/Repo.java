@@ -1,15 +1,26 @@
 package com.example.dentalclinicappointmentapp;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,34 +65,63 @@ public class Repo {
 
     public static void signInWithEmail(String email, String password, Runnable done, Callback<String> onError) {
         auth.signInWithEmailAndPassword(email, password)
-                .addOnSuccessListener(r -> done.run())
+                .addOnSuccessListener(r -> {
+                    logActivity("Account", who() + " logged in.");
+                    done.run();
+                })
                 .addOnFailureListener(e -> onError.on(e.getLocalizedMessage()));
     }
 
-    // Creates the account, then saves the patient's name on it. The full name goes on the
-    // Firebase profile (displayName) and first/middle/last are also kept in a users/{uid}
-    // document. If saving the name fails the account still exists, so we don't block the signup.
+    // Joins the name parts with single spaces, skipping an empty middle name.
+    public static String fullName(String first, String middle, String last) {
+        StringBuilder sb = new StringBuilder();
+        for (String part : new String[]{first, middle, last}) {
+            if (part == null || part.trim().isEmpty()) continue;
+            if (sb.length() > 0) sb.append(' ');
+            sb.append(part.trim());
+        }
+        return sb.toString();
+    }
+
+    // Creates the account, then saves the patient's details on it. The full name goes on the
+    // Firebase profile (displayName) and everything is also kept in a users/{uid} document,
+    // using the same field names the website uses (name, phone, age, gender, role) so a profile
+    // made here looks complete on the website too. If saving the details fails the account
+    // still exists, so we don't block the signup.
     public static void registerWithEmail(String email, String password,
                                          String firstName, String middleName, String lastName,
+                                         String phone, int age, String gender,
                                          Runnable done, Callback<String> onError) {
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnSuccessListener(r -> {
                     FirebaseUser user = r.getUser();
                     if (user == null) { done.run(); return; }
 
-                    String fullName = firstName + " " + middleName + " " + lastName;
+                    String fullName = fullName(firstName, middleName, lastName);
                     user.updateProfile(new UserProfileChangeRequest.Builder()
                             .setDisplayName(fullName).build());
 
                     Map<String, Object> profile = new HashMap<>();
+                    profile.put("uid", user.getUid());
                     profile.put("firstName", firstName);
                     profile.put("middleName", middleName);
                     profile.put("lastName", lastName);
+                    profile.put("name", fullName);
                     profile.put("fullName", fullName);
                     profile.put("email", email);
+                    profile.put("phone", phone);
+                    profile.put("age", age);
+                    profile.put("gender", gender);
+                    profile.put("role", "customer");
+                    profile.put("createdAt", FieldValue.serverTimestamp());
                     FirebaseFirestore.getInstance().collection("users").document(user.getUid())
                             .set(profile)
-                            .addOnCompleteListener(t -> done.run());
+                            .addOnCompleteListener(t -> {
+                                // Same wording the website uses for a new customer account.
+                                logActivity(fullName, email, "Account",
+                                        "A customer account was registered: " + fullName + ".");
+                                done.run();
+                            });
                 })
                 .addOnFailureListener(e -> onError.on(e.getLocalizedMessage()));
     }
@@ -105,10 +145,63 @@ public class Repo {
         auth.signOut();
     }
 
+    // Logs the logout first, then signs out. The log write needs the patient to still be signed
+    // in, so we wait for it to finish. If the phone is offline the write would wait forever,
+    // so after 2.5 seconds we sign out anyway.
+    public static void signOut(Runnable after) {
+        final boolean[] finished = {false};
+        Runnable finish = () -> {
+            if (finished[0]) return;
+            finished[0] = true;
+            auth.signOut();
+            if (after != null) after.run();
+        };
+        if (auth.getCurrentUser() == null) { finish.run(); return; }
+        logActivity("Account", who() + " logged out.").addOnCompleteListener(t -> finish.run());
+        new Handler(Looper.getMainLooper()).postDelayed(finish, 2500);
+    }
+
     // Default anonymous fallback if needed
     public static void signIn(Runnable done) {
         if (auth.getCurrentUser() != null) { done.run(); return; }
         auth.signInAnonymously().addOnSuccessListener(r -> done.run());
+    }
+
+    // ---- Activity log ----
+    // The admin website's Activity Logs page reads the "activityLogs" collection (newest 100,
+    // sorted by the timestamp text). We write rows in exactly the same shape the website does,
+    // so app actions show up there with no change to the website. The timestamp must stay an
+    // ISO string with fixed milliseconds, like JavaScript's toISOString(), or the sorting breaks.
+    // "(via app)" is added to the text because the admin table has no column for the source.
+    private static final DateTimeFormatter LOG_TIME =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).withZone(ZoneOffset.UTC);
+
+    // The signed-in patient's name, or the part of their email before the @ (same fallback as the website).
+    private static String who() {
+        String name = getDisplayName().trim();
+        if (!name.isEmpty()) return name;
+        String email = getUserEmail();
+        int at = email.indexOf('@');
+        return at > 0 ? email.substring(0, at) : email;
+    }
+
+    private static Task<DocumentReference> logActivity(String category, String description) {
+        String email = auth.getCurrentUser() != null && auth.getCurrentUser().getEmail() != null
+                ? auth.getCurrentUser().getEmail() : "";
+        return logActivity(who(), email, category, description);
+    }
+
+    private static Task<DocumentReference> logActivity(String user, String email, String category, String description) {
+        Map<String, Object> log = new HashMap<>();
+        log.put("category", category);
+        log.put("description", description + " (via app)");
+        log.put("user", user);
+        log.put("email", email);
+        log.put("role", "customer");
+        log.put("timestamp", LOG_TIME.format(Instant.now()));
+        log.put("source", "app");
+        return FirebaseFirestore.getInstance().collection("activityLogs").add(log)
+                .addOnFailureListener(e -> Log.w("Repo", "Could not save activity log", e));
     }
 
     private static String uid() {
@@ -197,8 +290,11 @@ public class Repo {
                 tx.set(ref, a);
                 return Boolean.TRUE;
             }).addOnSuccessListener(booked -> {
-                if (booked) done.run();
-                else onError.on("That time was just booked with this dentist. Please pick another slot.");
+                if (booked) {
+                    logActivity("Appointment", name + " submitted an appointment request ("
+                            + service + ", " + dentist.name + ", " + date + " " + time + ").");
+                    done.run();
+                } else onError.on("That time was just booked with this dentist. Please pick another slot.");
             }).addOnFailureListener(e -> onError.on("Could not book: " + e.getLocalizedMessage()));
         }).addOnFailureListener(e -> onError.on("Could not book: " + e.getLocalizedMessage()));
     }
@@ -270,14 +366,19 @@ public class Repo {
                 tx.update(oldRef, STATUS, STATUS_CANCELLED, QUEUE_NUMBER, 0);
                 return null;   // null means it worked
             }).addOnSuccessListener(problem -> {
-                if (problem == null) done.run();
-                else onError.on(problem);
+                if (problem == null) {
+                    logActivity("Reschedule", old.getDisplayName() + " rescheduled an appointment from "
+                            + old.date + " " + old.time + " to " + newDate + " " + newTime
+                            + " (waiting for admin to confirm).");
+                    done.run();
+                } else onError.on(problem);
             }).addOnFailureListener(e -> onError.on("Could not reschedule: " + e.getLocalizedMessage()));
         }).addOnFailureListener(e -> onError.on("Could not reschedule: " + e.getLocalizedMessage()));
     }
 
     public static void cancel(String id) {
-        col.document(id).update(STATUS, STATUS_CANCELLED);
+        col.document(id).update(STATUS, STATUS_CANCELLED)
+                .addOnSuccessListener(v -> logActivity("Appointment", who() + " cancelled an appointment."));
     }
 
     private static List<Appointment> sorted(List<Appointment> list) {
@@ -324,5 +425,76 @@ public class Repo {
             if (st.equals("pending") || st.equals("approved") || st.equals("confirmed") || st.equals(STATUS_SERVING)) return a;
         }
         return null;
+    }
+
+    // ---- Patient profile (My Account screen) ----
+    public static class Profile {
+        public String firstName = "", middleName = "", lastName = "", phone = "", gender = "", email = "";
+        public int age = 0;
+    }
+
+    private static String nz(String s) { return s == null ? "" : s; }
+
+    // Reads users/{uid}. Fields missing on older accounts just come back empty.
+    public static void loadProfile(Callback<Profile> cb) {
+        Profile p = new Profile();
+        FirebaseUser u = auth.getCurrentUser();
+        if (u == null) { cb.on(p); return; }
+        p.email = nz(u.getEmail());
+        FirebaseFirestore.getInstance().collection("users").document(u.getUid()).get()
+                .addOnSuccessListener(d -> {
+                    if (d.exists()) {
+                        p.firstName = nz(d.getString("firstName"));
+                        p.middleName = nz(d.getString("middleName"));
+                        p.lastName = nz(d.getString("lastName"));
+                        p.phone = nz(d.getString("phone"));
+                        p.gender = nz(d.getString("gender"));
+                        Long age = d.getLong("age");
+                        p.age = age == null ? 0 : age.intValue();
+                    }
+                    cb.on(p);
+                })
+                .addOnFailureListener(e -> cb.on(p));
+    }
+
+    // Saves the profile (merged, so fields this screen doesn't touch are kept). If newPassword
+    // is not empty it is changed first. Firebase asks for a recent login for that, same as the website.
+    // The email is not changed here.
+    public static void saveProfile(Profile p, String newPassword, Runnable done, Callback<String> onError) {
+        FirebaseUser u = auth.getCurrentUser();
+        if (u == null) { onError.on("You are not logged in."); return; }
+
+        String fullName = fullName(p.firstName, p.middleName, p.lastName);
+        Runnable saveDetails = () -> {
+            Map<String, Object> data = new HashMap<>();
+            data.put("firstName", p.firstName);
+            data.put("middleName", p.middleName);
+            data.put("lastName", p.lastName);
+            data.put("name", fullName);
+            data.put("fullName", fullName);
+            data.put("phone", p.phone);
+            data.put("age", p.age);
+            data.put("gender", p.gender);
+            FirebaseFirestore.getInstance().collection("users").document(u.getUid())
+                    .set(data, SetOptions.merge())
+                    .addOnSuccessListener(v -> u.updateProfile(new UserProfileChangeRequest.Builder()
+                                    .setDisplayName(fullName).build())
+                            .addOnCompleteListener(t -> {
+                                logActivity(fullName, nz(u.getEmail()), "Profile",
+                                        fullName + " updated their profile.");
+                                done.run();
+                            }))
+                    .addOnFailureListener(e -> onError.on("Could not save your profile: " + e.getLocalizedMessage()));
+        };
+
+        if (newPassword == null || newPassword.isEmpty()) {
+            saveDetails.run();
+            return;
+        }
+        u.updatePassword(newPassword)
+                .addOnSuccessListener(v -> saveDetails.run())
+                .addOnFailureListener(e -> onError.on(e instanceof FirebaseAuthRecentLoginRequiredException
+                        ? "For security, log out and log in again before changing your password."
+                        : "Could not change the password: " + e.getLocalizedMessage()));
     }
 }

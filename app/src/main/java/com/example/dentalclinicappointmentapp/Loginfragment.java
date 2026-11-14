@@ -8,6 +8,8 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
@@ -33,10 +35,14 @@ public class Loginfragment extends Fragment {
     private TextView passwordStrength;
     private View nameFields;
     private View confirmPasswordLayout;
+    private View registerExtraFields;
     private TextInputEditText firstNameInput;
     private TextInputEditText middleNameInput;
     private TextInputEditText lastNameInput;
     private TextInputEditText emailInput;
+    private TextInputEditText phoneInput;
+    private TextInputEditText ageInput;
+    private AutoCompleteTextView genderInput;
     private TextInputEditText passwordInput;
     private TextInputEditText confirmPasswordInput;
     private Button btnAuth;
@@ -54,10 +60,16 @@ public class Loginfragment extends Fragment {
         passwordStrength = v.findViewById(R.id.passwordStrength);
         nameFields = v.findViewById(R.id.nameFields);
         confirmPasswordLayout = v.findViewById(R.id.confirmPasswordLayout);
+        registerExtraFields = v.findViewById(R.id.registerExtraFields);
         firstNameInput = v.findViewById(R.id.firstNameInput);
         middleNameInput = v.findViewById(R.id.middleNameInput);
         lastNameInput = v.findViewById(R.id.lastNameInput);
         emailInput = v.findViewById(R.id.emailInput);
+        phoneInput = v.findViewById(R.id.phoneInput);
+        ageInput = v.findViewById(R.id.ageInput);
+        genderInput = v.findViewById(R.id.genderInput);
+        genderInput.setAdapter(new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_dropdown_item_1line, new String[]{"Male", "Female", "Prefer not to say"}));
         passwordInput = v.findViewById(R.id.passwordInput);
         confirmPasswordInput = v.findViewById(R.id.confirmPasswordInput);
         btnAuth = v.findViewById(R.id.btnAuth);
@@ -85,6 +97,7 @@ public class Loginfragment extends Fragment {
     private void updateMode() {
         int registerOnly = isLoginMode ? View.GONE : View.VISIBLE;
         nameFields.setVisibility(registerOnly);
+        registerExtraFields.setVisibility(registerOnly);
         confirmPasswordLayout.setVisibility(registerOnly);
         forgotPassword.setVisibility(isLoginMode ? View.VISIBLE : View.GONE);
 
@@ -151,6 +164,26 @@ public class Loginfragment extends Fragment {
             toast("Please enter a valid email address");
             return;
         }
+        String phone = textOf(phoneInput);
+        if (!phone.matches("\\d{11}")) {
+            toast("Phone number must contain exactly 11 digits");
+            return;
+        }
+        int age;
+        try {
+            age = Integer.parseInt(textOf(ageInput));
+        } catch (NumberFormatException e) {
+            age = 0;
+        }
+        if (age < 1 || age > 120) {
+            toast("Please enter a valid age");
+            return;
+        }
+        String gender = genderInput.getText() == null ? "" : genderInput.getText().toString().trim();
+        if (gender.isEmpty()) {
+            toast("Please select your gender");
+            return;
+        }
         if (!PasswordChecker.isStrong(password)) {
             toast("Password is too weak. Needs: " + PasswordChecker.missing(password));
             return;
@@ -161,7 +194,7 @@ public class Loginfragment extends Fragment {
         }
 
         setLoading(true);
-        Repo.registerWithEmail(email, password, first, middle, last, this::onSuccess, this::onError);
+        Repo.registerWithEmail(email, password, first, middle, last, phone, age, gender, this::onSuccess, this::onError);
     }
 
     // Opens a small dialog asking for the email, then sends Firebase's reset link.
@@ -248,6 +281,9 @@ public class Loginfragment extends Fragment {
         middleNameInput.setEnabled(!loading);
         lastNameInput.setEnabled(!loading);
         emailInput.setEnabled(!loading);
+        phoneInput.setEnabled(!loading);
+        ageInput.setEnabled(!loading);
+        genderInput.setEnabled(!loading);
         passwordInput.setEnabled(!loading);
         confirmPasswordInput.setEnabled(!loading);
     }

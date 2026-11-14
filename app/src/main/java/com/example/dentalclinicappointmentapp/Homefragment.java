@@ -29,6 +29,10 @@ public class Homefragment extends Fragment {
         View queueGrid = v.findViewById(R.id.btnQueueGrid);
         if (queueGrid != null) queueGrid.setOnClickListener(x -> ((MainActivity) requireActivity()).go(R.id.tab_queue));
 
+        v.findViewById(R.id.btnServices).setOnClickListener(x -> ((MainActivity) requireActivity()).open(new Servicesfragment()));
+        v.findViewById(R.id.btnDentists).setOnClickListener(x -> ((MainActivity) requireActivity()).open(new Dentistsfragment()));
+        v.findViewById(R.id.btnAccount).setOnClickListener(x -> ((MainActivity) requireActivity()).open(new Accountfragment()));
+
         View btnNotif = v.findViewById(R.id.btnNotification);
         if (btnNotif != null) btnNotif.setOnClickListener(x -> ((MainActivity) requireActivity()).showNotifications());
 
