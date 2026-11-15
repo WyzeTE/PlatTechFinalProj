@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
-    app:cardBackgroundColor="@android:color/white"
+    android:layout_marginBottom="18dp"
+    app:cardBackgroundColor="@color/white_surface"
     app:cardCornerRadius="18dp"
-    app:cardElevation="1dp"
+    app:cardElevation="0dp"
     app:strokeColor="@color/line"
     app:strokeWidth="1dp">
 
@@ -15,45 +16,66 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- adjustViewBounds shows the whole photo, so faces don't get cropped -->
-        <ImageView
-            android:id="@+id/photo"
+        <!-- Dentist Photo -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter"
-            android:importantForAccessibility="no" />
+            android:layout_height="220dp"
+            android:background="@color/light_green">
 
+            <ImageView
+                android:id="@+id/photo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
+                android:contentDescription="Dentist photo"
+                android:importantForAccessibility="no" />
+
+        </FrameLayout>
+
+        <!-- Dentist Information -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="18dp">
 
+            <!-- Dentist Name -->
             <TextView
                 android:id="@+id/name"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/ink"
+                android:textColor="@color/forest_green_dark"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
+            <!-- Specialty -->
             <TextView
                 android:id="@+id/specialty"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="9dp"
+                android:paddingStart="11dp"
+                android:paddingEnd="11dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:background="@drawable/bg_service_icon"
                 android:textColor="@color/forest_green"
-                android:textSize="14sp"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
+            <!-- Dentist Description -->
             <TextView
                 android:id="@+id/blurb"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
+                android:lineSpacingExtra="3dp"
                 android:textColor="@color/muted"
                 android:textSize="13sp" />
+
         </LinearLayout>
+
     </LinearLayout>
+
 </com.google.android.material.card.MaterialCardView>

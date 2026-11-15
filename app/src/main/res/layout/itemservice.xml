@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    app:cardBackgroundColor="@android:color/white"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="1dp"
+    android:layout_marginBottom="16dp"
+    app:cardBackgroundColor="@color/white_surface"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="0dp"
     app:strokeColor="@color/line"
     app:strokeWidth="1dp">
 
@@ -14,15 +15,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:padding="16dp">
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            app:cardBackgroundColor="@color/sage_light"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp"
-            app:strokeWidth="0dp">
+        <!-- Service Icon -->
+        <FrameLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_service_icon">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -30,10 +30,12 @@
                 android:layout_gravity="center"
                 android:text="+"
                 android:textColor="@color/forest_green"
-                android:textSize="22sp"
+                android:textSize="26sp"
                 android:textStyle="bold" />
-        </com.google.android.material.card.MaterialCardView>
 
+        </FrameLayout>
+
+        <!-- Service Information -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -41,35 +43,37 @@
             android:layout_marginStart="14dp"
             android:orientation="vertical">
 
+            <!-- Service Name -->
             <TextView
                 android:id="@+id/name"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/ink"
+                android:textColor="@color/forest_green_dark"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
+            <!-- Service Description -->
             <TextView
                 android:id="@+id/description"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="5dp"
+                android:lineSpacingExtra="2dp"
                 android:textColor="@color/muted"
                 android:textSize="13sp" />
 
+            <!-- Availability -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/bg_badge"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
                 android:text="● Available"
                 android:textColor="@color/forest_green"
                 android:textSize="12sp"
                 android:textStyle="bold" />
+
         </LinearLayout>
+
     </LinearLayout>
+
 </com.google.android.material.card.MaterialCardView>

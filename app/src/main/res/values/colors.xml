@@ -3,25 +3,44 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Color Palette #4: Fresh & Natural -->
+    <!-- OralCare Connect website brand palette -->
     <color name="forest_green">#244B3A</color>
-    <color name="forest_green_dark">#1A382B</color>
-    <color name="off_white">#FAF9F6</color>
+    <color name="forest_green_dark">#19392B</color>
+    <color name="forest_green_light">#41634F</color>
     <color name="sage">#A8B5A0</color>
-    <color name="sage_light">#E6ECDF</color>
 
-    <!-- App Aliases -->
-    <color name="teal">#244B3A</color>
-    <color name="teal_dark">#1A382B</color>
+    <!-- Website surfaces -->
+    <color name="off_white">#FAF9F6</color>
     <color name="ground">#FAF9F6</color>
-    <color name="ink">#18261F</color>
-    <color name="muted">#4D5E54</color>
-    <color name="mint">#E6ECDF</color>
-    <color name="line">#D3DDD0</color>
-    <color name="danger">#B3261E</color>
+    <color name="light_green">#EDF2ED</color>
+    <color name="sage_light">#EDF2ED</color>
+    <color name="surface_soft">#F5F8F4</color>
+    <color name="white_surface">#FFFFFF</color>
 
-    <!-- Progress tracker states -->
-    <color name="track_done">#7CB342</color>
-    <color name="track_waiting">#FBC02D</color>
-    <color name="track_error">#B3261E</color>
+    <!-- Website text and borders -->
+    <color name="ink">#26352D</color>
+    <color name="muted">#66736A</color>
+    <color name="placeholder">#7E8981</color>
+    <color name="line">#E6E9E3</color>
+    <color name="border_strong">#D5DCD3</color>
+
+    <!-- Backwards-compatible aliases -->
+    <color name="teal">#244B3A</color>
+    <color name="teal_dark">#19392B</color>
+    <color name="mint">#EDF2ED</color>
+
+    <!-- Semantic states -->
+    <color name="danger">#A63D3D</color>
+    <color name="danger_light">#FCEEEE</color>
+    <color name="warning">#9A6516</color>
+    <color name="warning_light">#FFF6E0</color>
+    <color name="success">#2B6F4E</color>
+    <color name="success_light">#EAF5EE</color>
+    <color name="info">#25618F</color>
+    <color name="info_light">#E9F3FC</color>
+
+    <!-- Queue progress states -->
+    <color name="track_done">#2B6F4E</color>
+    <color name="track_waiting">#9A6516</color>
+    <color name="track_error">#A63D3D</color>
 </resources>

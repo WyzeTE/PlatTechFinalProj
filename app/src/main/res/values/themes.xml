@@ -1,11 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.DentalQueue" parent="Theme.Material3.Light.NoActionBar">
+    <style name="Theme.DentalQueue"
+        parent="Theme.Material3.Light.NoActionBar">
+
+        <!-- Shared OralCare Connect website brand -->
         <item name="colorPrimary">@color/forest_green</item>
-        <item name="colorOnPrimary">@android:color/white</item>
-        <item name="colorSecondaryContainer">@color/sage_light</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <item name="colorPrimaryContainer">@color/light_green</item>
+        <item name="colorOnPrimaryContainer">@color/forest_green_dark</item>
+
+        <item name="colorSecondary">@color/forest_green_light</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <item name="colorSecondaryContainer">@color/light_green</item>
         <item name="colorOnSecondaryContainer">@color/forest_green_dark</item>
+
+        <item name="colorSurface">@color/white_surface</item>
+        <item name="colorOnSurface">@color/ink</item>
+
+        <item name="colorSurfaceVariant">@color/surface_soft</item>
+        <item name="colorOnSurfaceVariant">@color/muted</item>
+
+        <item name="colorOutline">@color/border_strong</item>
+
         <item name="android:colorBackground">@color/off_white</item>
-        <item name="android:statusBarColor">@color/forest_green</item>
+        <item name="android:windowBackground">@color/off_white</item>
+
+        <item name="android:statusBarColor">@color/forest_green_dark</item>
+        <item name="android:navigationBarColor">@color/off_white</item>
+
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <item name="android:fontFamily">sans</item>
+
     </style>
 </resources>
