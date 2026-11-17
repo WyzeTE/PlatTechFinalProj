@@ -2,15 +2,16 @@ package com.example.dentalclinicappointmentapp;
 
 import android.os.Bundle;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.WindowCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
 
 public class MainActivity extends AppCompatActivity {
     private BottomNavigationView nav;
@@ -18,6 +19,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Keep the app content inside the system window and resize it above the keyboard.
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
         setContentView(R.layout.activity_main);
         nav = findViewById(R.id.nav);
 
@@ -29,8 +35,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
-        // Tapping the tab you are already on closes any screen opened on top of it
-        // (Dentists, Services, My Account) and goes back to the tab itself.
         nav.setOnItemReselectedListener(item ->
                 getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE));
 
@@ -46,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
         showMainTabs();
     }
 
-    // Asks first, so a stray tap doesn't log the patient out.
     public void confirmLogout() {
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Log out?")
@@ -56,8 +59,6 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    // Signs out of Firebase Auth (the same accounts the website uses) and goes back to login.
-    // The logout is written to the activity log first (see Repo.signOut), then we leave.
     public void logout() {
         Repo.signOut(() -> {
             if (isFinishing() || isDestroyed()) return;
@@ -69,25 +70,19 @@ public class MainActivity extends AppCompatActivity {
 
     public void showMainTabs() {
         nav.setVisibility(View.VISIBLE);
-        // Tick Home and show it directly. After a log out the Home tab is still the selected one,
-        // so setSelectedItemId alone would not reliably swap the login screen out.
         nav.getMenu().findItem(R.id.tab_home).setChecked(true);
         show(new Homefragment());
     }
 
-    // Fragments call this to jump to another tab.
     public void go(int tabId) {
         nav.setSelectedItemId(tabId);
     }
 
     private void show(Fragment f) {
-        // A tab or the login screen replaces everything, including any screen opened with open().
         getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         getSupportFragmentManager().beginTransaction().replace(R.id.container, f).commit();
     }
 
-    // Opens a screen on top of the current tab (Dentists, Services, My Account).
-    // The phone's back button, or the arrow in the screen's header, returns to the tab.
     public void open(Fragment f) {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, f)
@@ -95,11 +90,11 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
-    // Show Notification updates dialog
     public void showNotifications() {
         Repo.listMineOnce(list -> {
             if (isFinishing() || isDestroyed()) return;
             StringBuilder sb = new StringBuilder();
+
             if (list == null || list.isEmpty()) {
                 sb.append("No active or past appointment notifications.");
             } else {

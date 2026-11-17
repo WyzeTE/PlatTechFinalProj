@@ -20,6 +20,8 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.DateValidatorPointForward;
+import com.google.android.material.datepicker.DateValidatorPointBackward;
+import com.google.android.material.datepicker.CompositeDateValidator;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.firestore.ListenerRegistration;
@@ -31,6 +33,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,15 +50,13 @@ public class Bookfragment extends Fragment {
     private ChipGroup timeGroup;
     private TextInputEditText datePickerInput;
     private String customSelectedDate = "";
-    private boolean updatingChips = false;   // true while WE change the date chips in code
+    private boolean updatingChips = false;
 
-    // Slots already booked for the chosen date and dentist (by the app or the website).
     private Set<String> takenSlots = new HashSet<>();
     private ListenerRegistration takenReg;
-    // Normal chip colours, saved so a chip can go back to them after being shown as "booked".
     private ColorStateList defaultChipFill;
     private ColorStateList defaultChipStroke;
-    // Re-checks the clock every 30 seconds so a slot fades out when its time passes.
+
     private final Handler clock = new Handler(Looper.getMainLooper());
     private final Runnable clockTick = new Runnable() {
         @Override public void run() {
@@ -81,8 +82,6 @@ public class Bookfragment extends Fragment {
         View btnNotif = v.findViewById(R.id.btnNotification);
         if (btnNotif != null) btnNotif.setOnClickListener(x -> ((MainActivity) requireActivity()).showNotifications());
 
-        // Visit type and dentist, same choices as the website. Both are filled in before the
-        // date chips below, because checking a date chip loads the time slots for the dentist.
         for (Catalog.Service s : Catalog.SERVICES) serviceGroup.addView(makeChip(s.name));
         ((Chip) serviceGroup.getChildAt(0)).setChecked(true);
         serviceInfo.setText(Catalog.SERVICES.get(0).description);
@@ -95,12 +94,12 @@ public class Bookfragment extends Fragment {
 
         for (String t : times) timeGroup.addView(makeChip(t));
 
-        // Quick date chips (starting from today)
         dateGroup.setOnCheckedStateChangeListener((group, ids) -> {
-            if (updatingChips) return;   // clearCheck() from the popup must not wipe the picked date
+            if (updatingChips) return;
             customSelectedDate = "";
             loadTimes();
         });
+
         for (int i = 0; i < 5; i++) {
             LocalDate d = clinicToday().plusDays(i);
             days.add(d);
@@ -108,19 +107,15 @@ public class Bookfragment extends Fragment {
         }
         ((Chip) dateGroup.getChildAt(0)).setChecked(true);
 
-        // A different dentist has a different schedule, so refresh the taken time slots.
-        // Set after the first load above so it can't fire before the date chips exist.
         dentistGroup.setOnCheckedStateChangeListener((group, ids) -> {
             dentistInfo.setText(selectedDentist().specialty);
             loadTimes();
         });
 
-        // Popup Material DatePicker
         if (datePickerInput != null) {
             LocalDate today = clinicToday();
             datePickerInput.setText(today.getDayOfWeek().toString().substring(0, 3) + ", " + today.getMonth().toString().substring(0, 3) + " " + today.getDayOfMonth());
             customSelectedDate = today.toString();
-
             datePickerInput.setOnClickListener(x -> showPopupDatePicker());
         }
 
@@ -128,28 +123,27 @@ public class Bookfragment extends Fragment {
         confirm.setOnClickListener(x -> {
             String name = nameInput.getText() != null ? nameInput.getText().toString().trim() : "";
             int timeId = timeGroup.getCheckedChipId();
+
             if (name.isEmpty() || timeId == View.NO_ID) {
                 Toast.makeText(requireContext(), "Enter your name and pick a time slot", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // selectedDate() always gives an ISO date (it comes from LocalDate.toString()), so parsing is safe.
             LocalDate picked = LocalDate.parse(selectedDate());
-            if (picked.isBefore(clinicToday())) {
-                Toast.makeText(requireContext(), "Selected date has already passed. Please select a future date.", Toast.LENGTH_SHORT).show();
+            if (!AppointmentDatePolicy.isAllowed(picked)) {
+                Toast.makeText(requireContext(), "Please choose an appointment date within the next 90 days.", Toast.LENGTH_LONG).show();
                 return;
             }
 
             String time = ((Chip) timeGroup.findViewById(timeId)).getText().toString();
 
-            // The slot may have passed while the screen was open, so check again right now.
             if (isPast(picked, time, LocalDateTime.now(ZoneId.systemDefault()))) {
                 Toast.makeText(requireContext(), "That time has already passed. Please pick a later slot.", Toast.LENGTH_SHORT).show();
                 applyTimeStates();
                 return;
             }
 
-            confirm.setEnabled(false);   // stop double taps while saving
+            confirm.setEnabled(false);
             Repo.book(name, selectedService().name, selectedDentist(), selectedDate(), time,
                     () -> {
                         if (!isAdded()) return;
@@ -160,7 +154,7 @@ public class Bookfragment extends Fragment {
                         if (!isAdded()) return;
                         confirm.setEnabled(true);
                         Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
-                        loadTimes();   // refresh so the taken slot greys out
+                        loadTimes();
                     });
         });
 
@@ -171,34 +165,46 @@ public class Bookfragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if (takenReg != null) takenReg.remove();   // stop listening when the screen is gone
+        if (takenReg != null) takenReg.remove();
         takenReg = null;
         clock.removeCallbacks(clockTick);
     }
 
     private void showPopupDatePicker() {
+        LocalDate today = AppointmentDatePolicy.today();
+        LocalDate latest = AppointmentDatePolicy.latestDate();
+        long startMillis = AppointmentDatePolicy.utcMillis(today);
+        long endMillis = AppointmentDatePolicy.utcMillis(latest);
+
         CalendarConstraints constraints = new CalendarConstraints.Builder()
-                .setValidator(DateValidatorPointForward.now())
+                .setStart(startMillis)
+                .setEnd(endMillis)
+                .setValidator(CompositeDateValidator.allOf(Arrays.asList(
+                        DateValidatorPointForward.from(startMillis),
+                        DateValidatorPointBackward.before(endMillis))))
                 .build();
 
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                 .setTitleText("Select appointment date")
                 .setCalendarConstraints(constraints)
-                .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                .setSelection(startMillis)
                 .build();
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
             Instant instant = Instant.ofEpochMilli(selection);
             LocalDate selected = instant.atZone(ZoneId.of("UTC")).toLocalDate();
             customSelectedDate = selected.toString();
+
             if (datePickerInput != null) {
                 datePickerInput.setText(selected.getDayOfWeek().toString().substring(0, 3) + ", " + selected.getMonth().toString().substring(0, 3) + " " + selected.getDayOfMonth());
             }
+
             if (dateGroup != null) {
                 updatingChips = true;
                 dateGroup.clearCheck();
                 updatingChips = false;
             }
+
             loadTimes();
         });
 
@@ -209,6 +215,7 @@ public class Bookfragment extends Fragment {
         if (!customSelectedDate.isEmpty()) {
             return customSelectedDate;
         }
+
         int index = dateGroup.indexOfChild(dateGroup.findViewById(dateGroup.getCheckedChipId()));
         return days.get(Math.max(index, 0)).toString();
     }
@@ -227,26 +234,18 @@ public class Bookfragment extends Fragment {
         final String date = selectedDate();
         final Catalog.Dentist dentist = selectedDentist();
 
-        // Stop listening to the previous date/dentist, then show the clock-based state straight away.
         if (takenReg != null) takenReg.remove();
         takenSlots = new HashSet<>();
         applyTimeStates();
 
-        // Live list of booked slots. This runs again whenever someone books (app or website).
         takenReg = Repo.listenTakenTimes(date, dentist.name, taken -> {
-            if (!isAdded()) return;   // screen may have closed while loading
-            // user already switched date or dentist, so ignore this old answer
+            if (!isAdded()) return;
             if (!date.equals(selectedDate()) || dentist != selectedDentist()) return;
             takenSlots = taken;
             applyTimeStates();
         });
     }
 
-    // Sets every time chip to one of three looks:
-    //   available: normal and tappable
-    //   past:      faded and not tappable (the time has already gone by)
-    //   booked:    red and not tappable (someone else already has that slot)
-    // A slot that is both past and booked is shown as past.
     private void applyTimeStates() {
         if (timeGroup == null || timeGroup.getChildCount() == 0) return;
 
@@ -258,7 +257,6 @@ public class Bookfragment extends Fragment {
             Chip c = (Chip) timeGroup.getChildAt(i);
             if (c == null) continue;
 
-            // Save the normal colours from the first chip, before anything gets restyled.
             if (defaultChipFill == null) {
                 defaultChipFill = c.getChipBackgroundColor();
                 defaultChipStroke = c.getChipStrokeColor();
@@ -269,7 +267,7 @@ public class Bookfragment extends Fragment {
             boolean booked = !past && takenSlots.contains(time);
 
             c.setEnabled(!past && !booked);
-            if (!c.isEnabled() && c.isChecked()) c.setChecked(false);   // never keep an unavailable slot selected
+            if (!c.isEnabled() && c.isChecked()) c.setChecked(false);
 
             if (booked) {
                 c.setChipBackgroundColor(ColorStateList.valueOf(ColorUtils.setAlphaComponent(danger, 40)));
@@ -283,25 +281,23 @@ public class Bookfragment extends Fragment {
         }
     }
 
-    // True when the slot's start time is now or earlier, in the phone's own time zone.
     private static boolean isPast(LocalDate date, String time, LocalDateTime now) {
         LocalTime slot;
         try {
-            slot = LocalTime.parse(time);   // chips read like "09:30"
+            slot = LocalTime.parse(time);
         } catch (DateTimeParseException e) {
             return false;
         }
         return !LocalDateTime.of(date, slot).isAfter(now);
     }
 
-    // "Today" in the phone's own time zone.
     private static LocalDate clinicToday() {
         return LocalDate.now(ZoneId.systemDefault());
     }
 
     private Chip makeChip(String text) {
         Chip c = (Chip) LayoutInflater.from(requireContext()).inflate(R.layout.itemchip, null);
-        c.setId(View.generateViewId());   // ChipGroup needs an id on every chip
+        c.setId(View.generateViewId());
         c.setText(text);
         return c;
     }
