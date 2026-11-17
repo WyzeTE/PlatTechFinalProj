@@ -1,3 +1,4 @@
+
 "use strict";
 
 /* =========================================
@@ -89,11 +90,46 @@ const defaultAppointments = [
 ];
 
 const defaultServices = [
-    { name: "Check-up", description: "General dental check-up and consultation." },
-    { name: "Cleaning", description: "Professional dental cleaning and scaling." },
-    { name: "Filling", description: "Tooth restoration and dental filling service." },
-    { name: "Braces", description: "Orthodontic consultation and adjustment." },
-    { name: "General Consultation", description: "General appointment and consultation service." }
+    {
+        name: "General Dental Consultation",
+        description: "General dental consultation and oral health assessment."
+    },
+    {
+        name: "Dental Cleaning",
+        description: "Professional cleaning to help maintain good oral hygiene."
+    },
+    {
+        name: "Tooth Extraction",
+        description: "Consultation and care for teeth that may need removal."
+    },
+    {
+        name: "Tooth Filling",
+        description: "Dental restoration consultation for damaged or decayed teeth."
+    },
+    {
+        name: "Teeth Whitening",
+        description: "Consultation for professional teeth whitening services."
+    },
+    {
+        name: "Root Canal Consultation",
+        description: "Assessment and consultation for possible root canal treatment."
+    },
+    {
+        name: "Braces Consultation",
+        description: "Consultation about braces and orthodontic treatment."
+    },
+    {
+        name: "Denture Consultation",
+        description: "Consultation about denture options and fitting."
+    },
+    {
+        name: "Gum Treatment Consultation",
+        description: "Assessment and consultation for gum health concerns."
+    },
+    {
+        name: "Emergency Dental Assessment",
+        description: "Priority assessment for urgent dental concerns."
+    }
 ];
 
 const defaultDentists = [
@@ -152,7 +188,9 @@ function normalizeStatus(status) {
         completed: "Completed",
         done: "Completed",
         cancelled: "Cancelled",
-        rejected: "Rejected"
+        canceled: "Cancelled",
+        rejected: "Rejected",
+        "cancellation requested": "Cancellation Requested"
     };
 
     return statuses[value] ||
@@ -271,7 +309,8 @@ function saveSession(user) {
         lastName: user.lastName || "",
         phone: user.phone || "",
         age: user.age || "",
-        gender: user.gender || ""
+        gender: user.gender || "",
+        bookingBlockedUntil: user.bookingBlockedUntil || null
     }));
 }
 
@@ -301,8 +340,26 @@ function loadData() {
             appointments = Array.isArray(saved.appointments)
                 ? saved.appointments : [];
 
-            services = Array.isArray(saved.services) && saved.services.length
-                ? saved.services : defaultServices.map(s => ({ ...s }));
+            const savedServices = Array.isArray(saved.services)
+                ? saved.services : [];
+
+            services = defaultServices.map(service => {
+                const existing = savedServices.find(
+                    item => item.name?.toLowerCase() === service.name.toLowerCase()
+                );
+
+                return existing
+                    ? { ...service, ...existing }
+                    : { ...service };
+            });
+
+            savedServices.forEach(service => {
+                if (!services.some(
+                    item => item.name?.toLowerCase() === service.name?.toLowerCase()
+                )) {
+                    services.push(service);
+                }
+            });
 
             const savedDentists = Array.isArray(saved.dentists)
                 ? saved.dentists : [];
@@ -962,7 +1019,8 @@ function loginUser(user) {
         lastName: user.lastName || "",
         phone: user.phone || "",
         age: user.age || "",
-        gender: user.gender || ""
+        gender: user.gender || "",
+        bookingBlockedUntil: user.bookingBlockedUntil || null
     };
 
     saveSession(currentUser);
@@ -1420,7 +1478,7 @@ document.getElementById("appointmentForm").addEventListener(
             a.dentist === dentist &&
             a.date === date &&
             a.time === time &&
-            !["Rejected", "Cancelled"].includes(a.status)
+            !["Rejected", "Cancelled"].includes(normalizeStatus(a.status))
         );
 
         if (duplicate) {
@@ -1484,13 +1542,48 @@ document.getElementById("customerBookingForm").addEventListener(
 
         if (!currentUser || currentUser.role !== "customer") return;
 
+        const error = document.getElementById("bookingError");
+        error.textContent = "";
+
+        let bookingBlockedUntil = currentUser.bookingBlockedUntil || null;
+
+        if (isFirebaseAvailable && db && currentUser.uid) {
+            try {
+                const profileDoc = await db
+                    .collection("users")
+                    .doc(currentUser.uid)
+                    .get();
+
+                if (profileDoc.exists) {
+                    bookingBlockedUntil =
+                        profileDoc.data().bookingBlockedUntil || null;
+
+                    currentUser.bookingBlockedUntil = bookingBlockedUntil;
+                    saveSession(currentUser);
+                }
+            } catch (checkError) {
+                console.error("Booking restriction check failed:", checkError);
+                error.textContent =
+                    "Unable to verify your booking eligibility. Please try again.";
+                return;
+            }
+        }
+
+        if (
+            bookingBlockedUntil &&
+            new Date(bookingBlockedUntil).getTime() > Date.now()
+        ) {
+            const until = new Date(bookingBlockedUntil).toLocaleString();
+
+            error.textContent =
+                `Your booking privileges are temporarily suspended until ${until}.`;
+            return;
+        }
+
         const service = document.getElementById("customerService").value;
         const dentist = document.getElementById("customerDentist").value;
         const date = document.getElementById("customerAppointmentDate").value;
         const time = document.getElementById("customerAppointmentTime").value;
-        const error = document.getElementById("bookingError");
-
-        error.textContent = "";
 
         if (!service || !dentist || !date || !time) {
             error.textContent = "Please complete all fields.";
@@ -1511,7 +1604,7 @@ document.getElementById("customerBookingForm").addEventListener(
             a.dentist === dentist &&
             a.date === date &&
             a.time === time &&
-            !["Rejected", "Cancelled"].includes(a.status)
+            !["Rejected", "Cancelled"].includes(normalizeStatus(a.status))
         );
 
         if (duplicate) {
@@ -1585,7 +1678,7 @@ function openRescheduleModal(id) {
         return;
     }
 
-    if (!["Pending", "Approved"].includes(appointment.status)) {
+    if (!["Pending", "Approved"].includes(normalizeStatus(appointment.status))) {
         alert("This appointment cannot be rescheduled.");
         return;
     }
@@ -1766,48 +1859,218 @@ async function cancelAppointment(id) {
 
     if (!belongsToUser) return;
 
-    if (!["Pending", "Approved"].includes(appointment.status)) {
+    const status = normalizeStatus(appointment.status);
+
+    if (!["Pending", "Approved"].includes(status)) {
         alert("This appointment can no longer be cancelled.");
         return;
     }
 
-    if (!confirm("Are you sure you want to cancel this appointment?")) return;
+    if (appointment.cancellationRequestedAt) {
+        alert("You already have a cancellation request awaiting approval.");
+        return;
+    }
+
+    if (!confirm(
+        "Send a cancellation request to the administrator? Your appointment will remain active until the request is reviewed."
+    )) return;
+
+    const updates = {
+        previousStatus: status,
+        status: "cancellation requested",
+        cancellationRequestedAt: new Date().toISOString()
+    };
 
     if (isFirebaseAvailable && db) {
         try {
-            await db.collection("appointments").doc(String(id)).update({
-                status: "cancelled",
-                queueNumber: 0,
-                pendingReschedule: null
-            });
+            await db.collection("appointments")
+                .doc(String(id))
+                .update(updates);
         } catch (error) {
-            console.error("Cancellation failed:", error);
-            alert("The appointment could not be cancelled. Please try again.");
+            console.error("Cancellation request failed:", error);
+            alert("Your cancellation request could not be submitted.");
             return;
         }
     } else {
-        appointment.status = "Cancelled";
-        appointment.queueNumber = 0;
-        appointment.pendingReschedule = null;
-
-        rebuildQueueFromAppointments();
+        Object.assign(appointment, updates);
         saveData();
     }
 
-    addNotification(`${currentUser.name} cancelled an appointment.`);
+    appointment.previousStatus = status;
+    appointment.status = "Cancellation Requested";
+    appointment.cancellationRequestedAt = updates.cancellationRequestedAt;
 
-    await recordActivity(
-        "Appointment",
-        `${currentUser.name} cancelled an appointment.`
+    addNotification(
+        `${currentUser.name} requested to cancel an appointment.`
     );
 
-    alert("Your appointment has been cancelled.");
+    await recordActivity(
+        "Cancellation",
+        `${currentUser.name} submitted an appointment cancellation request.`
+    );
+
+    alert("Your cancellation request has been sent for administrator approval.");
+
     renderAll();
 }
 
 
 /* =========================================
-   22. UPDATE APPOINTMENT STATUS
+   22. ADMIN CANCELLATION REVIEW
+========================================= */
+
+async function reviewCancellation(id, decision) {
+    if (!currentUser || currentUser.role !== "admin") return;
+
+    const appointment = appointments.find(a => String(a.id) === String(id));
+
+    if (
+        !appointment ||
+        normalizeStatus(appointment.status) !== "Cancellation Requested"
+    ) {
+        return;
+    }
+
+    if (!["approve", "reject"].includes(decision)) return;
+
+    const now = new Date();
+    const reviewedAt = now.toISOString();
+
+    if (decision === "approve") {
+        const bookingBlockedUntil = new Date(
+            now.getTime() + 7 * 24 * 60 * 60 * 1000
+        ).toISOString();
+
+        const updates = {
+            status: "cancelled",
+            queueNumber: 0,
+            pendingReschedule: null,
+            bookingBlockedUntil,
+            cancellationReviewedAt: reviewedAt
+        };
+
+        if (isFirebaseAvailable && db) {
+            try {
+                const batch = db.batch();
+
+                const appointmentRef = db
+                    .collection("appointments")
+                    .doc(String(id));
+
+                batch.update(appointmentRef, updates);
+
+                if (appointment.userId) {
+                    const userRef = db
+                        .collection("users")
+                        .doc(String(appointment.userId));
+
+                    batch.set(userRef, {
+                        bookingBlockedUntil
+                    }, { merge: true });
+
+                } else if (appointment.email) {
+                    const userSnapshot = await db
+                        .collection("users")
+                        .where("email", "==", appointment.email)
+                        .limit(1)
+                        .get();
+
+                    if (!userSnapshot.empty) {
+                        batch.set(userSnapshot.docs[0].ref, {
+                            bookingBlockedUntil
+                        }, { merge: true });
+                    }
+                }
+
+                await batch.commit();
+
+            } catch (error) {
+                console.error("Cancellation approval failed:", error);
+                alert("The cancellation request could not be approved.");
+                return;
+            }
+        } else {
+            const accounts = getAccounts();
+
+            const account = accounts.find(item =>
+                (appointment.userId && item.uid === appointment.userId) ||
+                item.email?.toLowerCase() === appointment.email?.toLowerCase()
+            );
+
+            if (account) {
+                account.bookingBlockedUntil = bookingBlockedUntil;
+                saveAccounts(accounts);
+            }
+
+            Object.assign(appointment, updates);
+        }
+
+        appointment.status = "Cancelled";
+        appointment.queueNumber = 0;
+        appointment.pendingReschedule = null;
+        appointment.bookingBlockedUntil = bookingBlockedUntil;
+        appointment.cancellationReviewedAt = reviewedAt;
+
+        addNotification(
+            `Cancellation request for ${appointment.patientName} was approved.`
+        );
+
+        await recordActivity(
+            "Cancellation",
+            `Administrator approved the cancellation request for ${appointment.patientName}. The customer is restricted from booking for 7 days.`
+        );
+
+        alert("Cancellation approved. The customer cannot book for 7 days.");
+
+    } else {
+        const restoredStatus = normalizeStatus(
+            appointment.previousStatus || "Pending"
+        );
+
+        const updates = {
+            status: restoredStatus.toLowerCase(),
+            previousStatus: null,
+            cancellationRequestedAt: null,
+            cancellationReviewedAt: reviewedAt
+        };
+
+        if (isFirebaseAvailable && db) {
+            try {
+                await db.collection("appointments")
+                    .doc(String(id))
+                    .update(updates);
+            } catch (error) {
+                console.error("Cancellation rejection failed:", error);
+                alert("The cancellation request could not be rejected.");
+                return;
+            }
+        }
+
+        appointment.status = restoredStatus;
+        appointment.previousStatus = null;
+        appointment.cancellationRequestedAt = null;
+        appointment.cancellationReviewedAt = reviewedAt;
+
+        addNotification(
+            `Cancellation request for ${appointment.patientName} was rejected.`
+        );
+
+        await recordActivity(
+            "Cancellation",
+            `Administrator rejected the cancellation request for ${appointment.patientName}.`
+        );
+
+        alert("Cancellation request rejected. The appointment remains active.");
+    }
+
+    rebuildQueueFromAppointments();
+    saveData();
+    renderAll();
+}
+
+
+/* =========================================
+   23. UPDATE APPOINTMENT STATUS
 ========================================= */
 
 async function updateStatus(id, status) {
@@ -1820,11 +2083,11 @@ async function updateStatus(id, status) {
 
     const allowed = ["Approved", "Rejected", "Cancelled", "Completed"];
 
-    if (!allowed.includes(newStatus) || appointment.status === newStatus) return;
+    if (!allowed.includes(newStatus) || normalizeStatus(appointment.status) === newStatus) return;
 
     if (
         newStatus === "Completed" &&
-        !["Approved", "Serving"].includes(appointment.status)
+        !["Approved", "Serving"].includes(normalizeStatus(appointment.status))
     ) {
         alert("Only approved or serving appointments can be completed.");
         return;
@@ -1888,13 +2151,14 @@ async function updateStatus(id, status) {
 
 
 /* =========================================
-   23. APPOINTMENT TABLE
+   24. APPOINTMENT TABLE
 ========================================= */
 
 function appointmentHTML(a) {
+    const status = normalizeStatus(a.status);
     let actions = '<span class="muted">No actions</span>';
 
-    if (a.status === "Pending") {
+    if (status === "Pending") {
         actions = `
             <div class="action-group">
                 <button class="btn btn-success"
@@ -1905,12 +2169,29 @@ function appointmentHTML(a) {
                     onclick="deleteAppointment('${escapeHTML(a.id)}','admin')">Delete</button>
             </div>
         `;
-    } else if (["Approved", "Serving"].includes(a.status)) {
+    } else if (status === "Cancellation Requested") {
+        actions = `
+            <div class="action-group">
+                <button class="btn btn-success"
+                    onclick="reviewCancellation('${escapeHTML(a.id)}','approve')">
+                    Approve Cancellation
+                </button>
+                <button class="btn btn-danger"
+                    onclick="reviewCancellation('${escapeHTML(a.id)}','reject')">
+                    Reject Cancellation
+                </button>
+                <button class="btn btn-light"
+                    onclick="deleteAppointment('${escapeHTML(a.id)}','admin')">
+                    Delete
+                </button>
+            </div>
+        `;
+    } else if (["Approved", "Serving"].includes(status)) {
         actions = `
             <div class="action-group">
                 <button class="btn btn-success"
                     onclick="updateStatus('${escapeHTML(a.id)}','Completed')">Complete</button>
-                ${a.status === "Approved" ? `
+                ${status === "Approved" ? `
                     <button class="btn btn-light"
                         onclick="updateStatus('${escapeHTML(a.id)}','Cancelled')">Cancel</button>
                 ` : ""}
@@ -1949,8 +2230,8 @@ function appointmentHTML(a) {
             <td>${escapeHTML(formatDate(a.date))}</td>
             <td>${escapeHTML(a.time)}</td>
             <td>
-                <span class="status status-${a.status.toLowerCase()}">
-                    ${escapeHTML(a.status)}
+                <span class="status status-${status.toLowerCase().replace(/\s+/g, "-")}">
+                    ${escapeHTML(status)}
                 </span>
                 ${reschedule}
             </td>
@@ -1994,7 +2275,7 @@ function renderAppointments() {
 
 
 /* =========================================
-   24. DELETE APPOINTMENT
+   25. DELETE APPOINTMENT
 ========================================= */
 
 async function deleteAppointment(id, actor = "customer") {
@@ -2008,7 +2289,7 @@ async function deleteAppointment(id, actor = "customer") {
             appointment.email?.toLowerCase() === currentUser.email.toLowerCase() ||
             (currentUser.uid && appointment.userId === currentUser.uid);
 
-        if (!belongsToUser || appointment.status !== "Cancelled") {
+        if (!belongsToUser || normalizeStatus(appointment.status) !== "Cancelled") {
             alert("You can only delete your own cancelled appointments.");
             return;
         }
@@ -2047,7 +2328,7 @@ async function deleteAppointment(id, actor = "customer") {
 
 
 /* =========================================
-   25. SERVICES
+   26. SERVICES
 ========================================= */
 
 function renderServices() {
@@ -2095,7 +2376,7 @@ function renderServices() {
 
 
 /* =========================================
-   26. DENTISTS
+   27. DENTISTS
 ========================================= */
 
 document.getElementById("dentistForm").addEventListener(
@@ -2145,7 +2426,7 @@ async function removeDentist(id) {
 
     const hasAppointments = appointments.some(a =>
         a.dentist === dentist.name &&
-        !["Rejected", "Cancelled", "Completed"].includes(a.status)
+        !["Rejected", "Cancelled", "Completed"].includes(normalizeStatus(a.status))
     );
 
     if (hasAppointments) {
@@ -2230,7 +2511,7 @@ function renderDentists() {
 
 
 /* =========================================
-   27. CUSTOMER PROFILE
+   28. CUSTOMER PROFILE
 ========================================= */
 
 function fillProfileForm() {
@@ -2428,7 +2709,7 @@ document.getElementById("profileForm").addEventListener(
 
 
 /* =========================================
-   28. CUSTOMER APPOINTMENTS
+   29. CUSTOMER APPOINTMENTS
 ========================================= */
 
 function getCustomerAppointments() {
@@ -2458,10 +2739,12 @@ function renderCustomerPortal() {
     document.getElementById("customerTotalAppointments").textContent = mine.length;
 
     document.getElementById("customerPendingAppointments").textContent =
-        mine.filter(a => a.status === "Pending").length;
+        mine.filter(a => normalizeStatus(a.status) === "Pending").length;
 
     document.getElementById("customerApprovedAppointments").textContent =
-        mine.filter(a => ["Approved", "Serving"].includes(a.status)).length;
+        mine.filter(a =>
+            ["Approved", "Serving"].includes(normalizeStatus(a.status))
+        ).length;
 
     const recent = mine.slice(0, 5);
 
@@ -2478,18 +2761,22 @@ function renderCustomerPortal() {
                         </tr>
                     </thead>
                     <tbody>
-                        ${recent.map(a => `
-                            <tr>
-                                <td>${escapeHTML(a.service)}</td>
-                                <td>${escapeHTML(a.dentist || "Not assigned")}</td>
-                                <td>${escapeHTML(formatDate(a.date))}</td>
-                                <td>
-                                    <span class="status status-${a.status.toLowerCase()}">
-                                        ${escapeHTML(a.status)}
-                                    </span>
-                                </td>
-                            </tr>
-                        `).join("")}
+                        ${recent.map(a => {
+                            const status = normalizeStatus(a.status);
+
+                            return `
+                                <tr>
+                                    <td>${escapeHTML(a.service)}</td>
+                                    <td>${escapeHTML(a.dentist || "Not assigned")}</td>
+                                    <td>${escapeHTML(formatDate(a.date))}</td>
+                                    <td>
+                                        <span class="status status-${status.toLowerCase().replace(/\s+/g, "-")}">
+                                            ${escapeHTML(status)}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join("")}
                     </tbody>
                 </table>
             `
@@ -2512,9 +2799,10 @@ function renderCustomerPortal() {
                     </thead>
                     <tbody>
                         ${mine.map(a => {
+                            const status = normalizeStatus(a.status);
                             let actions = '<span class="muted">—</span>';
 
-                            if (["Pending", "Approved"].includes(a.status)) {
+                            if (["Pending", "Approved"].includes(status)) {
                                 actions = `
                                     <div class="action-group">
                                         <button class="btn btn-light"
@@ -2524,14 +2812,20 @@ function renderCustomerPortal() {
                                         </button>
                                         <button class="btn btn-danger"
                                             onclick="cancelAppointment('${escapeHTML(a.id)}')">
-                                            Cancel
+                                            Request Cancellation
                                         </button>
                                     </div>
                                     ${a.pendingReschedule
                                         ? '<small class="reschedule-note">Reschedule request awaiting review</small>'
                                         : ""}
                                 `;
-                            } else if (a.status === "Cancelled") {
+                            } else if (status === "Cancellation Requested") {
+                                actions = `
+                                    <small class="reschedule-note">
+                                        Cancellation request awaiting admin approval.
+                                    </small>
+                                `;
+                            } else if (status === "Cancelled") {
                                 actions = `
                                     <button class="btn btn-danger"
                                         onclick="deleteAppointment('${escapeHTML(a.id)}','customer')">
@@ -2553,8 +2847,8 @@ function renderCustomerPortal() {
                                             : "—")
                                     )}</td>
                                     <td>
-                                        <span class="status status-${a.status.toLowerCase()}">
-                                            ${escapeHTML(a.status)}
+                                        <span class="status status-${status.toLowerCase().replace(/\s+/g, "-")}">
+                                            ${escapeHTML(status)}
                                         </span>
                                     </td>
                                     <td>${actions}</td>
@@ -2568,7 +2862,7 @@ function renderCustomerPortal() {
 
     const active = mine.find(a =>
         a.queueNumber > 0 &&
-        ["Approved", "Serving"].includes(a.status)
+        ["Approved", "Serving"].includes(normalizeStatus(a.status))
     );
 
     document.getElementById("customerQueueNumber").textContent =
@@ -2578,11 +2872,11 @@ function renderCustomerPortal() {
 
     let message = "You currently have no active queue.";
 
-    if (active?.status === "Approved") {
+    if (active && normalizeStatus(active.status) === "Approved") {
         message = "Your appointment is approved. Please wait for your turn.";
-    } else if (active?.status === "Serving") {
+    } else if (active && normalizeStatus(active.status) === "Serving") {
         message = "It is your turn! Please proceed.";
-    } else if (mine.some(a => a.status === "Completed")) {
+    } else if (mine.some(a => normalizeStatus(a.status) === "Completed")) {
         message = "Your previous service has been completed.";
     }
 
@@ -2591,7 +2885,7 @@ function renderCustomerPortal() {
 
 
 /* =========================================
-   29. SETTINGS
+   30. SETTINGS
 ========================================= */
 
 function loadSettings() {
@@ -2667,7 +2961,7 @@ document.getElementById("settingsForm").addEventListener(
 
 
 /* =========================================
-   30. ADMIN DASHBOARD
+   31. ADMIN DASHBOARD
 ========================================= */
 
 function renderDashboard() {
@@ -2675,10 +2969,10 @@ function renderDashboard() {
         appointments.length;
 
     document.getElementById("pendingAppointments").textContent =
-        appointments.filter(a => a.status === "Pending").length;
+        appointments.filter(a => normalizeStatus(a.status) === "Pending").length;
 
     document.getElementById("approvedAppointments").textContent =
-        appointments.filter(a => a.status === "Approved").length;
+        appointments.filter(a => normalizeStatus(a.status) === "Approved").length;
 
     document.getElementById("totalServices").textContent = services.length;
 
@@ -2702,23 +2996,27 @@ function renderDashboard() {
                             </tr>
                         </thead>
                         <tbody>
-                            ${recent.map(a => `
-                                <tr>
-                                    <td>${escapeHTML(a.patientName || a.name)}</td>
-                                    <td>${escapeHTML(formatDate(a.date))}</td>
-                                    <td>
-                                        <span class="status status-${a.status.toLowerCase()}">
-                                            ${escapeHTML(a.status)}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-danger"
-                                            onclick="deleteAppointment('${escapeHTML(a.id)}','admin')">
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            `).join("")}
+                            ${recent.map(a => {
+                                const status = normalizeStatus(a.status);
+
+                                return `
+                                    <tr>
+                                        <td>${escapeHTML(a.patientName || a.name)}</td>
+                                        <td>${escapeHTML(formatDate(a.date))}</td>
+                                        <td>
+                                            <span class="status status-${status.toLowerCase().replace(/\s+/g, "-")}">
+                                                ${escapeHTML(status)}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-danger"
+                                                onclick="deleteAppointment('${escapeHTML(a.id)}','admin')">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join("")}
                         </tbody>
                     </table>
                 </div>
@@ -2728,7 +3026,7 @@ function renderDashboard() {
 
 
 /* =========================================
-   31. RENDER ALL
+   32. RENDER ALL
 ========================================= */
 
 function renderAll() {
@@ -2744,7 +3042,7 @@ function renderAll() {
 
 
 /* =========================================
-   32. SESSION RESTORATION
+   33. SESSION RESTORATION
 ========================================= */
 
 function restoreSession() {
@@ -2771,7 +3069,7 @@ function restoreSession() {
 
 
 /* =========================================
-   33. INITIALIZATION
+   34. INITIALIZATION
 ========================================= */
 
 loadData();
