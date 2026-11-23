@@ -15,11 +15,18 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.Context;
+import android.view.inputmethod.InputMethodManager;
+import android.graphics.Rect;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import android.widget.ScrollView;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
@@ -36,6 +43,7 @@ public class Loginfragment extends Fragment {
     private View nameFields;
     private View confirmPasswordLayout;
     private View registerExtraFields;
+    private ScrollView authScrollView;
     private TextInputEditText firstNameInput;
     private TextInputEditText middleNameInput;
     private TextInputEditText lastNameInput;
@@ -52,6 +60,17 @@ public class Loginfragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inf, @Nullable ViewGroup parent, @Nullable Bundle b) {
         View v = inf.inflate(R.layout.fragmentlogin, parent, false);
+        authScrollView = v.findViewById(R.id.authScrollView);
+
+        final int basePaddingBottom = v.getPaddingBottom();
+        ViewCompat.setOnApplyWindowInsetsListener(v, (view, insets) -> {
+            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            int bottom = Math.max(ime.bottom, bars.bottom);
+            view.setPadding(view.getPaddingLeft(), view.getPaddingTop(),
+                    view.getPaddingRight(), basePaddingBottom + bottom);
+            return insets;
+        });
 
         authTitle = v.findViewById(R.id.authTitle);
         authSubtitle = v.findViewById(R.id.authSubtitle);
@@ -75,9 +94,58 @@ public class Loginfragment extends Fragment {
         btnAuth = v.findViewById(R.id.btnAuth);
         progress = v.findViewById(R.id.progress);
 
+        // Keep the focused input field visible when the keyboard opens.
+        // Automatically scroll to the focused input when the keyboard opens.
+        View.OnFocusChangeListener keepFieldVisible = (field, hasFocus) -> {
+            if (!hasFocus) return;
+
+            authScrollView.postDelayed(() -> {
+                if (!isAdded() || field.getWindowToken() == null) {
+                    return;
+                }
+
+                Rect fieldRect = new Rect(
+                        0,
+                        0,
+                        field.getWidth(),
+                        field.getHeight()
+                );
+
+                // Let the ScrollView and its parent handle the correct coordinates.
+                field.requestRectangleOnScreen(fieldRect, true);
+
+            }, 300);
+        };
+
+        firstNameInput.setOnFocusChangeListener(keepFieldVisible);
+        middleNameInput.setOnFocusChangeListener(keepFieldVisible);
+        lastNameInput.setOnFocusChangeListener(keepFieldVisible);
+        emailInput.setOnFocusChangeListener(keepFieldVisible);
+        phoneInput.setOnFocusChangeListener(keepFieldVisible);
+        ageInput.setOnFocusChangeListener(keepFieldVisible);
+        genderInput.setOnFocusChangeListener(keepFieldVisible);
+        passwordInput.setOnFocusChangeListener(keepFieldVisible);
+        confirmPasswordInput.setOnFocusChangeListener(keepFieldVisible);
+
         toggleAuth.setOnClickListener(x -> {
+            // Hide the keyboard before changing the form height.
+            InputMethodManager imm = (InputMethodManager)
+                    requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(toggleAuth.getWindowToken(), 0);
+            }
+
+            toggleAuth.clearFocus();
+
             isLoginMode = !isLoginMode;
             updateMode();
+
+            // Reset the scroll position after the fields have changed.
+            authScrollView.post(() -> {
+                authScrollView.scrollTo(0, 0);
+                authScrollView.requestLayout();
+            });
         });
 
         btnAuth.setOnClickListener(x -> performAuth());
@@ -152,11 +220,12 @@ public class Loginfragment extends Fragment {
         String middle = textOf(middleNameInput);
         String last = textOf(lastNameInput);
 
-        if (first.isEmpty() || middle.isEmpty() || last.isEmpty()) {
-            toast("Please enter your first, middle and last name");
+        if (first.isEmpty() || last.isEmpty()) {
+            toast("Please enter your first and last name");
             return;
         }
-        if (!isValidName(first) || !isValidName(middle) || !isValidName(last)) {
+        if (!isValidName(first) || !isValidName(last)
+                || (!middle.isEmpty() && !isValidName(middle))) {
             toast("Names can only have letters, spaces, hyphens and apostrophes");
             return;
         }
